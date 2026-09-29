@@ -45,6 +45,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
     val context = LocalContext.current
+    val activity = context as? ComponentActivity
 
     // Runtime Permission for Microphone Audio capture
     val audioPermissionLauncher = rememberLauncherForActivityResult(
@@ -65,6 +66,7 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
     val currentWallet by viewModel.currentWallet.collectAsStateWithLifecycle()
     val currentNotifications by viewModel.currentNotifications.collectAsStateWithLifecycle()
+    val phoneOtpState by viewModel.phoneOtpState.collectAsStateWithLifecycle()
     val currentTab by viewModel.currentTab.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val selectedCategory by viewModel.selectedCategory.collectAsStateWithLifecycle()
@@ -76,6 +78,7 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
     val vipPlans by viewModel.vipPlans.collectAsStateWithLifecycle()
     val storeCustomizations by viewModel.storeCustomizations.collectAsStateWithLifecycle()
     val allEvents by viewModel.allEvents.collectAsStateWithLifecycle()
+    val allAgencies by viewModel.allAgencies.collectAsStateWithLifecycle()
 
     val activeRoomId by viewModel.activeRoomId.collectAsStateWithLifecycle()
     val activeRoom by viewModel.activeRoom.collectAsStateWithLifecycle()
@@ -109,6 +112,17 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
     val inspectingUser by viewModel.inspectingUser.collectAsStateWithLifecycle()
     val toastMessage by viewModel.toastMessage.collectAsStateWithLifecycle()
 
+    val activeHandRaises by viewModel.activeHandRaises.collectAsStateWithLifecycle()
+    val walletTransactions by viewModel.walletTransactions.collectAsStateWithLifecycle()
+    val followersList by viewModel.followersList.collectAsStateWithLifecycle()
+    val followingList by viewModel.followingList.collectAsStateWithLifecycle()
+    val showHostDashboard by viewModel.showHostDashboard.collectAsStateWithLifecycle()
+    val showAgencyDashboard by viewModel.showAgencyDashboard.collectAsStateWithLifecycle()
+    val showLedgerDialog by viewModel.showLedgerDialog.collectAsStateWithLifecycle()
+    val showFollowListDialog by viewModel.showFollowListDialog.collectAsStateWithLifecycle()
+    val followListTitle by viewModel.followListTitle.collectAsStateWithLifecycle()
+    val showEditProfileModal by viewModel.showEditProfileModal.collectAsStateWithLifecycle()
+
     // Toast listener
     LaunchedEffect(toastMessage) {
         toastMessage?.let { msg ->
@@ -128,6 +142,7 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                     seats = activeSeats,
                     messages = activeRoomMessages,
                     activeGiftTx = activeGiftAnimation,
+                    handRaises = activeHandRaises,
                     currentUserId = currentUser?.userId ?: 504094L,
                     isMicEnabled = isMicEnabled,
                     isMuted = isMuted,
@@ -153,6 +168,9 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                             details = "Reported by room listener"
                         )
                     },
+                    onRaiseHand = { viewModel.raiseHand() },
+                    onCancelHandRaise = { viewModel.cancelHandRaise() },
+                    onAcceptHandRaise = { user, seatIdx -> viewModel.acceptHandRaise(user, seatIdx) },
                     onLockSeat = { seatIdx -> viewModel.lockSeat(seatIdx) },
                     onMuteSeat = { seatIdx -> viewModel.muteSeat(seatIdx) },
                     onKickSeat = { seatIdx -> viewModel.kickUserFromSeat(seatIdx) },
@@ -337,7 +355,13 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                                     onOpenSupport = { viewModel.openSupport() },
                                     onOpenSettings = { viewModel.openSettings() },
                                     onOpenAdminDashboard = { viewModel.openAdminDashboard() },
-                                    onOpenAuth = { viewModel.openAuth() }
+                                    onOpenAuth = { viewModel.openAuth() },
+                                    onOpenFollowers = { viewModel.openFollowersList() },
+                                    onOpenFollowing = { viewModel.openFollowingList() },
+                                    onOpenEditProfile = { viewModel.openEditProfile() },
+                                    onOpenLedger = { viewModel.openLedger() },
+                                    onOpenHostDashboard = { viewModel.openHostDashboard() },
+                                    onOpenAgencyDashboard = { viewModel.openAgencyDashboard() }
                                 )
                             }
                         }
@@ -418,13 +442,14 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                 onDismiss = { viewModel.closeSettings() },
                 onLogout = {
                     viewModel.closeSettings()
-                    viewModel.openAuth()
+                    viewModel.logoutCurrentUser()
                 },
                 onDeleteAccount = {
                     viewModel.closeSettings()
-                    viewModel.showToast("Account deletion requested. Data cleared.")
-                    viewModel.openAuth()
-                }
+                    viewModel.deleteCurrentUserAccount()
+                },
+                user = currentUser,
+                deviceInfo = viewModel.authManager.getDeviceInfo()
             )
         }
 
@@ -448,10 +473,46 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
         if (showAuthModal) {
             AuthRegistrationScreen(
                 onDismiss = { viewModel.closeAuth() },
-                onRegister = { nick, gender, country, dob, lang, bio ->
-                    viewModel.registerNewUser(nick, gender, country, dob, lang, bio)
+                onGoogleSignIn = { onProfileNeeded ->
+                    activity?.let { act ->
+                        viewModel.loginWithGoogle(act, onProfileNeeded)
+                    }
                 },
-                onQuickSwitchUser = { userId -> viewModel.switchUser(userId) }
+                onSendPhoneOtp = { phone ->
+                    activity?.let { act ->
+                        viewModel.sendPhoneOtp(act, phone)
+                    }
+                },
+                onVerifyPhoneOtp = { otpCode, onProfileNeeded ->
+                    viewModel.verifyPhoneOtp(otpCode, onProfileNeeded)
+                },
+                phoneOtpState = phoneOtpState,
+                onGuestSignIn = { onProfileNeeded ->
+                    viewModel.loginAsGuest(onProfileNeeded)
+                },
+                onCompleteRegistration = { authResult, nick, gender, country, dob, lang, bio, avatarUrl ->
+                    viewModel.completeRegistrationWithProfile(
+                        authResult = authResult,
+                        nickname = nick,
+                        gender = gender,
+                        country = country,
+                        dob = dob,
+                        language = lang,
+                        bio = bio,
+                        avatarUrl = avatarUrl
+                    )
+                },
+                onQuickSwitchUser = { userId -> viewModel.switchUser(userId) },
+                deviceInfo = viewModel.authManager.getDeviceInfo()
+            )
+        }
+
+        // Blocked / Suspended Account Handling
+        if (currentUser?.isBanned == true) {
+            BlockedAccountDialog(
+                user = currentUser!!,
+                onAppeal = { viewModel.openSupport() },
+                onLogout = { viewModel.logoutCurrentUser() }
             )
         }
 
@@ -515,6 +576,59 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                             Text("Close", color = TextMuted)
                         }
                     }
+                }
+            )
+        }
+
+        // Host Dashboard
+        if (showHostDashboard) {
+            HostDashboardDialog(
+                user = currentUser,
+                wallet = currentWallet,
+                onDismiss = { viewModel.closeHostDashboard() },
+                onConvertDiamonds = { diamonds -> viewModel.convertDiamondsToCoins(diamonds) }
+            )
+        }
+
+        // Agency Dashboard
+        if (showAgencyDashboard) {
+            AgencyDashboardDialog(
+                agencies = allAgencies,
+                onDismiss = { viewModel.closeAgencyDashboard() },
+                onJoinAgency = { agencyId -> viewModel.showToast("Joined agency $agencyId! 🌟") }
+            )
+        }
+
+        // Wallet Ledger & History
+        if (showLedgerDialog) {
+            WalletLedgerDialog(
+                wallet = currentWallet,
+                transactions = walletTransactions,
+                onDismiss = { viewModel.closeLedger() }
+            )
+        }
+
+        // Followers / Following List
+        if (showFollowListDialog) {
+            FollowListDialog(
+                title = followListTitle,
+                users = if (followListTitle == "Followers") followersList else followingList,
+                onDismiss = { viewModel.closeFollowList() },
+                onUserClick = { u ->
+                    viewModel.closeFollowList()
+                    viewModel.inspectUser(u)
+                },
+                onToggleFollow = { targetId -> viewModel.toggleFollow(targetId) }
+            )
+        }
+
+        // Edit Profile Dialog
+        if (showEditProfileModal) {
+            EditProfileDialog(
+                user = currentUser,
+                onDismiss = { viewModel.closeEditProfile() },
+                onSave = { nick, bio, gender, country, avatar ->
+                    viewModel.updateMyProfile(nick, bio, gender, country, avatar)
                 }
             )
         }

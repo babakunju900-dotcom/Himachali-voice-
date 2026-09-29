@@ -25,6 +25,10 @@ class StarKingRepository(private val dao: StarKingDao) {
     fun getOfficialUsers(): Flow<List<UserEntity>> = dao.getOfficialUsers()
     fun getTopHosts(limit: Int = 10): Flow<List<UserEntity>> = dao.getTopHosts(limit)
 
+    suspend fun findUserByAuthIdentifier(identifier: String): UserEntity? = withContext(Dispatchers.IO) {
+        if (identifier.isBlank()) null else dao.getUserByAuthIdentifier(identifier)
+    }
+
     suspend fun registerUser(
         nickname: String,
         gender: String,
@@ -32,9 +36,27 @@ class StarKingRepository(private val dao: StarKingDao) {
         dob: String,
         language: String,
         bio: String,
-        avatarUrl: String = "avatar_user"
+        avatarUrl: String = "avatar_1",
+        authProvider: String = "GUEST",
+        authIdentifier: String = "",
+        deviceInfo: String = "",
+        sessionId: String = ""
     ): UserEntity = withContext(Dispatchers.IO) {
-        // Generate a permanent 6-digit numeric User ID (e.g., between 500000 and 999999)
+        // If an account with this authIdentifier already exists, update session and return it
+        if (authIdentifier.isNotBlank()) {
+            val existing = dao.getUserByAuthIdentifier(authIdentifier)
+            if (existing != null) {
+                val updated = existing.copy(
+                    lastLoginAt = System.currentTimeMillis(),
+                    deviceInfo = deviceInfo.ifBlank { existing.deviceInfo },
+                    sessionId = sessionId.ifBlank { existing.sessionId }
+                )
+                dao.updateUser(updated)
+                return@withContext updated
+            }
+        }
+
+        // Generate a permanent 6-digit numeric User ID (between 500000 and 999999)
         var newUserId = 500000L + Random.nextLong(100000, 499999)
         while (dao.getUserByIdSync(newUserId) != null) {
             newUserId = 500000L + Random.nextLong(100000, 499999)
@@ -53,7 +75,12 @@ class StarKingRepository(private val dao: StarKingDao) {
             exp = 0,
             vipTier = 0,
             role = UserRole.USER.name,
-            createdAt = System.currentTimeMillis()
+            createdAt = System.currentTimeMillis(),
+            authProvider = authProvider,
+            authIdentifier = authIdentifier,
+            deviceInfo = deviceInfo,
+            sessionId = sessionId,
+            lastLoginAt = System.currentTimeMillis()
         )
 
         dao.insertUser(newUser)
@@ -78,6 +105,20 @@ class StarKingRepository(private val dao: StarKingDao) {
         )
 
         newUser
+    }
+
+    suspend fun deleteAccount(userId: Long) = withContext(Dispatchers.IO) {
+        dao.clearUserFromAllSeats(userId)
+        dao.deleteFollowsForUser(userId)
+        dao.deleteUserCustomizations(userId)
+        dao.deleteWalletTransactions(userId)
+        dao.deleteWallet(userId)
+        dao.deleteUser(userId)
+    }
+
+    suspend fun logoutUser(userId: Long) = withContext(Dispatchers.IO) {
+        val existing = dao.getUserByIdSync(userId) ?: return@withContext
+        dao.updateUser(existing.copy(sessionId = ""))
     }
 
     suspend fun updateUserProfile(
@@ -739,5 +780,68 @@ class StarKingRepository(private val dao: StarKingDao) {
             openTickets = openTickets,
             pendingReports = pendingReports
         )
+    }
+
+    // --- Hand Raises ---
+    fun getHandRaises(roomId: Long): Flow<List<RoomHandRaiseEntity>> = dao.getHandRaisesForRoom(roomId)
+
+    suspend fun raiseHand(roomId: Long, user: UserEntity) = withContext(Dispatchers.IO) {
+        dao.insertHandRaise(
+            RoomHandRaiseEntity(
+                roomId = roomId,
+                userId = user.userId,
+                userName = user.nickname,
+                userAvatar = user.avatarUrl,
+                userLevel = user.level,
+                userVip = user.vipTier
+            )
+        )
+        dao.insertMessage(
+            ChatMessageEntity(
+                roomId = roomId,
+                senderUserId = user.userId,
+                senderName = user.nickname,
+                senderAvatar = user.avatarUrl,
+                messageText = "raised hand to speak ✋",
+                type = "SEAT_ACTION"
+            )
+        )
+    }
+
+    suspend fun cancelHandRaise(roomId: Long, userId: Long) = withContext(Dispatchers.IO) {
+        dao.deleteHandRaise(roomId, userId)
+    }
+
+    suspend fun acceptHandRaise(roomId: Long, user: UserEntity, seatIndex: Int): Result<Boolean> = withContext(Dispatchers.IO) {
+        dao.deleteHandRaise(roomId, user.userId)
+        takeSeat(roomId, seatIndex, user)
+    }
+
+    // --- Followers / Following Users ---
+    fun getFollowersUsers(userId: Long): Flow<List<UserEntity>> = dao.getFollowersUsers(userId)
+    fun getFollowingUsers(userId: Long): Flow<List<UserEntity>> = dao.getFollowingUsers(userId)
+
+    // --- Diamond to Coin Conversion (Host Earnings) ---
+    suspend fun convertDiamondsToCoins(userId: Long, diamonds: Long): Result<Long> = withContext(Dispatchers.IO) {
+        val wallet = dao.getWalletSync(userId) ?: return@withContext Result.failure(Exception("Wallet not found"))
+        if (wallet.diamondBalance < diamonds) {
+            return@withContext Result.failure(Exception("Insufficient diamonds"))
+        }
+        val coinsToAdd = diamonds // 1 diamond = 1 coin conversion
+        dao.updateWallet(
+            wallet.copy(
+                diamondBalance = wallet.diamondBalance - diamonds,
+                coinBalance = wallet.coinBalance + coinsToAdd
+            )
+        )
+        dao.insertTransaction(
+            WalletTransactionEntity(
+                userId = userId,
+                amount = coinsToAdd,
+                type = "REWARD",
+                description = "Converted $diamonds 💎 diamonds to $coinsToAdd 🪙 coins"
+            )
+        )
+        Result.success(coinsToAdd)
     }
 }

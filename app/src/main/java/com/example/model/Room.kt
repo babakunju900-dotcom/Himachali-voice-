@@ -48,3 +48,14 @@ data class RoomMemberEntity(
     val role: String = "LISTENER", // HOST, MODERATOR, SPEAKER, LISTENER
     val joinedAt: Long = System.currentTimeMillis()
 )
+
+@Entity(tableName = "room_hand_raises", primaryKeys = ["roomId", "userId"])
+data class RoomHandRaiseEntity(
+    val roomId: Long,
+    val userId: Long,
+    val userName: String,
+    val userAvatar: String,
+    val userLevel: Int = 1,
+    val userVip: Int = 0,
+    val timestamp: Long = System.currentTimeMillis()
+)

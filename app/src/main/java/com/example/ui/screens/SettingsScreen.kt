@@ -4,10 +4,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.model.UserEntity
 import com.example.ui.theme.*
 
 @Composable
@@ -26,11 +27,16 @@ fun SettingsScreen(
     onDismiss: () -> Unit,
     onLogout: () -> Unit,
     onDeleteAccount: () -> Unit,
+    user: UserEntity? = null,
+    deviceInfo: String = "",
     modifier: Modifier = Modifier
 ) {
     val languages = listOf("English", "Hindi", "Bengali", "Nepali", "Urdu", "Indonesian", "Arabic")
     var micSensitivity by remember { mutableFloatStateOf(0.7f) }
     var soundEffects by remember { mutableStateOf(true) }
+
+    var showLogoutConfirmDialog by remember { mutableStateOf(false) }
+    var showDeleteAccountConfirmDialog by remember { mutableStateOf(false) }
 
     Surface(
         modifier = modifier
@@ -50,7 +56,7 @@ fun SettingsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Settings ⚙️",
+                    text = "Settings & Security ⚙️",
                     color = TextWhite,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
@@ -66,6 +72,116 @@ fun SettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
+                // Account & Authentication Section
+                if (user != null) {
+                    item {
+                        Text(
+                            text = "Account & Authentication",
+                            color = StarGoldPrimary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = StarKingSurfaceVariantDark),
+                            shape = RoundedCornerShape(14.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(text = "Permanent User ID", color = TextMuted, fontSize = 12.sp)
+                                    Text(
+                                        text = "${user.userId}",
+                                        color = StarGoldPrimary,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp
+                                    )
+                                }
+                                HorizontalDivider(color = StarKingCardBorder.copy(alpha = 0.5f))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(text = "Auth Provider", color = TextMuted, fontSize = 12.sp)
+                                    Text(
+                                        text = user.authProvider.ifBlank { "GUEST" },
+                                        color = TextWhite,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 12.sp
+                                    )
+                                }
+                                if (user.authIdentifier.isNotBlank()) {
+                                    HorizontalDivider(color = StarKingCardBorder.copy(alpha = 0.5f))
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(text = "Linked Credential", color = TextMuted, fontSize = 12.sp)
+                                        Text(
+                                            text = user.authIdentifier,
+                                            color = TextChampagne,
+                                            fontSize = 12.sp
+                                        )
+                                    }
+                                }
+                                HorizontalDivider(color = StarKingCardBorder.copy(alpha = 0.5f))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(text = "Account Role", color = TextMuted, fontSize = 12.sp)
+                                    Text(
+                                        text = user.role,
+                                        color = if (user.role == "USER") TextWhite else StarGoldLight,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 12.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Device & Active Session Management
+                    item {
+                        Text(
+                            text = "Active Session & Device Security",
+                            color = StarGoldPrimary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = StarKingSurfaceVariantDark),
+                            shape = RoundedCornerShape(14.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(8.dp)
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(LiveGreen)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(text = "Current Active Session", color = LiveGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                }
+                                Text(
+                                    text = if (deviceInfo.isNotBlank()) deviceInfo else user.deviceInfo.ifBlank { "Android Mobile Client" },
+                                    color = TextWhite,
+                                    fontSize = 12.sp
+                                )
+                                Text(
+                                    text = "Session Token: ${user.sessionId.ifBlank { "SK-SES-SECURE" }}",
+                                    color = TextMuted,
+                                    fontSize = 10.sp
+                                )
+                            }
+                        }
+                    }
+                }
+
                 // Multilingual selector
                 item {
                     Text(text = "Language / भाषा / لغة", color = StarGoldPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
@@ -148,29 +264,95 @@ fun SettingsScreen(
                     }
                 }
 
-                // Account Actions
+                // Account Actions: Logout & Delete Account
                 item {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Button(
-                            onClick = onLogout,
+                            onClick = { showLogoutConfirmDialog = true },
                             colors = ButtonDefaults.buttonColors(containerColor = StarKingSurfaceVariantDark),
                             shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                                .testTag("logout_btn")
                         ) {
-                            Text(text = "Log Out", color = TextWhite, fontWeight = FontWeight.Bold)
+                            Text(text = "Log Out from Device", color = TextWhite, fontWeight = FontWeight.Bold)
                         }
 
                         Button(
-                            onClick = onDeleteAccount,
-                            colors = ButtonDefaults.buttonColors(containerColor = DangerRed.copy(alpha = 0.8f)),
+                            onClick = { showDeleteAccountConfirmDialog = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = DangerRed.copy(alpha = 0.85f)),
                             shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                                .testTag("delete_account_btn")
                         ) {
-                            Text(text = "Delete Account & Clear Data", color = TextWhite, fontWeight = FontWeight.Bold)
+                            Text(text = "Delete Account & Permanently Erase Data", color = TextWhite, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
             }
+        }
+
+        // Confirmation Dialog: Logout
+        if (showLogoutConfirmDialog) {
+            AlertDialog(
+                onDismissRequest = { showLogoutConfirmDialog = false },
+                title = { Text("Log Out?", color = TextWhite, fontWeight = FontWeight.Bold) },
+                text = { Text("Are you sure you want to log out of Star King Voice Chat? Your session will end.", color = TextMuted) },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showLogoutConfirmDialog = false
+                            onLogout()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = StarGoldPrimary, contentColor = StarKingBgDark)
+                    ) {
+                        Text("Log Out", fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showLogoutConfirmDialog = false }) {
+                        Text("Cancel", color = TextMuted)
+                    }
+                },
+                containerColor = StarKingSurfaceDark,
+                shape = RoundedCornerShape(16.dp)
+            )
+        }
+
+        // Confirmation Dialog: Delete Account
+        if (showDeleteAccountConfirmDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteAccountConfirmDialog = false },
+                icon = { Icon(Icons.Default.Warning, contentDescription = null, tint = DangerRed) },
+                title = { Text("Delete Account Permanently?", color = DangerRed, fontWeight = FontWeight.Bold) },
+                text = {
+                    Text(
+                        text = "This action CANNOT be undone. Your permanent User ID (${user?.userId}), wallet coin balance, virtual gifts received, and profile history will be permanently deleted from Star King.",
+                        color = TextMuted
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showDeleteAccountConfirmDialog = false
+                            onDeleteAccount()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = DangerRed)
+                    ) {
+                        Text("Permanently Delete", color = TextWhite, fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteAccountConfirmDialog = false }) {
+                        Text("Keep My Account", color = TextWhite)
+                    }
+                },
+                containerColor = StarKingSurfaceDark,
+                shape = RoundedCornerShape(16.dp)
+            )
         }
     }
 }

@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
         RoomEntity::class,
         RoomSeatEntity::class,
         RoomMemberEntity::class,
+        RoomHandRaiseEntity::class,
         ChatMessageEntity::class,
         GiftEntity::class,
         GiftTransactionEntity::class,

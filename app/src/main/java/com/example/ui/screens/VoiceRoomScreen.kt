@@ -34,6 +34,7 @@ fun VoiceRoomScreen(
     seats: List<RoomSeatEntity>,
     messages: List<ChatMessageEntity>,
     activeGiftTx: GiftTransactionEntity?,
+    handRaises: List<RoomHandRaiseEntity>,
     currentUserId: Long,
     isMicEnabled: Boolean,
     isMuted: Boolean,
@@ -49,6 +50,9 @@ fun VoiceRoomScreen(
     onSendMessage: (String) -> Unit,
     onFollowHost: (Long) -> Unit,
     onReportRoom: () -> Unit,
+    onRaiseHand: () -> Unit,
+    onCancelHandRaise: () -> Unit,
+    onAcceptHandRaise: (UserEntity, Int) -> Unit,
     onLockSeat: (Int) -> Unit,
     onMuteSeat: (Int) -> Unit,
     onKickSeat: (Int) -> Unit,
@@ -59,6 +63,7 @@ fun VoiceRoomScreen(
 
     var chatInput by remember { mutableStateOf("") }
     var showHostControlSheet by remember { mutableStateOf(false) }
+    var showHandRaiseQueueSheet by remember { mutableStateOf(false) }
     var selectedSeatForHostAction by remember { mutableStateOf<RoomSeatEntity?>(null) }
     var showSeatActionModal by remember { mutableStateOf<RoomSeatEntity?>(null) }
 
@@ -167,6 +172,25 @@ fun VoiceRoomScreen(
                         modifier = Modifier.size(32.dp).testTag("room_report_btn")
                     ) {
                         Icon(Icons.Default.Report, contentDescription = "Report", tint = TextMuted, modifier = Modifier.size(18.dp))
+                    }
+
+                    // Host Hand-Raise Queue Badge (if host)
+                    if (isHost && handRaises.isNotEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(StarGoldPrimary)
+                                .clickable { showHandRaiseQueueSheet = true }
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                .testTag("room_hand_queue_btn")
+                        ) {
+                            Text(
+                                text = "✋ ${handRaises.size}",
+                                color = StarKingBgDark,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
 
                     // Host Management shortcut if host
@@ -304,6 +328,20 @@ fun VoiceRoomScreen(
                             .testTag("room_leave_seat_btn")
                     ) {
                         Icon(Icons.Default.ExitToApp, contentDescription = "Leave Seat", tint = DangerRed, modifier = Modifier.size(20.dp))
+                    }
+                } else {
+                    // Raise Hand Toggle for listeners
+                    val hasRaisedHand = handRaises.any { it.userId == currentUserId }
+                    IconButton(
+                        onClick = { if (hasRaisedHand) onCancelHandRaise() else onRaiseHand() },
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(CircleShape)
+                            .background(if (hasRaisedHand) StarGoldPrimary else StarKingSurfaceVariantDark)
+                            .border(1.dp, if (hasRaisedHand) StarGoldLight else StarKingCardBorder, CircleShape)
+                            .testTag("room_raise_hand_btn")
+                    ) {
+                        Text(text = "✋", fontSize = 18.sp)
                     }
                 }
 
@@ -522,6 +560,90 @@ fun VoiceRoomScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text("End Voice Party Room", fontWeight = FontWeight.Bold, color = TextWhite)
+                    }
+                }
+            }
+        }
+
+        // Host Hand-Raise Queue Sheet
+        if (showHandRaiseQueueSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showHandRaiseQueueSheet = false },
+                containerColor = StarKingSurfaceDark
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .navigationBarsPadding(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = "✋ Hand-Raise Queue (${handRaises.size})",
+                        color = StarGoldPrimary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                    Text(
+                        text = "Listeners waiting to speak. Select an available seat to invite them.",
+                        color = TextMuted,
+                        fontSize = 12.sp
+                    )
+
+                    val emptySeats = seats.filter { it.userId == null && !it.isLocked }
+
+                    if (handRaises.isEmpty()) {
+                        Text("No listeners waiting in queue.", color = TextMuted, fontSize = 13.sp)
+                    } else {
+                        handRaises.forEach { raise ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(StarKingSurfaceVariantDark)
+                                    .padding(10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    AvatarView(
+                                        avatarUrl = raise.userAvatar,
+                                        nickname = raise.userName,
+                                        size = 36.dp,
+                                        level = raise.userLevel,
+                                        vipTier = raise.userVip
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column {
+                                        Text(text = raise.userName, color = TextWhite, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                        Text(text = "Lv.${raise.userLevel}", color = StarGoldLight, fontSize = 11.sp)
+                                    }
+                                }
+
+                                if (emptySeats.isNotEmpty()) {
+                                    val firstEmpty = emptySeats.first()
+                                    Button(
+                                        onClick = {
+                                            val targetUser = UserEntity(
+                                                userId = raise.userId,
+                                                nickname = raise.userName,
+                                                avatarUrl = raise.userAvatar,
+                                                level = raise.userLevel,
+                                                vipTier = raise.userVip
+                                            )
+                                            onAcceptHandRaise(targetUser, firstEmpty.seatIndex)
+                                            showHandRaiseQueueSheet = false
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = StarGoldPrimary, contentColor = StarKingBgDark),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Text("Invite to Seat #${firstEmpty.seatIndex + 1}", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                } else {
+                                    Text("Seats Full", color = DangerRed, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
                     }
                 }
             }

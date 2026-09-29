@@ -1,8 +1,10 @@
 package com.example.viewmodel
 
+import android.app.Activity
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.auth.*
 import com.example.data.*
 import com.example.model.*
 import com.example.voice.StarKingVoiceEngine
@@ -24,6 +26,8 @@ class StarKingViewModel(application: Application) : AndroidViewModel(application
     private val database = StarKingDatabase.getDatabase(application, viewModelScope)
     private val repository = StarKingRepository(database.starKingDao())
     val voiceEngine = StarKingVoiceEngine(application)
+    val authManager = StarKingAuthManager(application)
+    val phoneOtpState: StateFlow<PhoneOtpState> = authManager.phoneOtpState
 
     // Current logged in user (defaults to 504094L)
     private val _currentUserId = MutableStateFlow(504094L)
@@ -137,6 +141,24 @@ class StarKingViewModel(application: Application) : AndroidViewModel(application
     val allReports: StateFlow<List<ReportEntity>> = repository.getAllReports()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val activeHandRaises: StateFlow<List<RoomHandRaiseEntity>> = _activeRoomId
+        .flatMapLatest { roomId ->
+            if (roomId == null) flowOf(emptyList()) else repository.getHandRaises(roomId)
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    val walletTransactions: StateFlow<List<WalletTransactionEntity>> = _currentUserId
+        .flatMapLatest { id -> repository.getTransactions(id) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val followersList: StateFlow<List<UserEntity>> = _currentUserId
+        .flatMapLatest { id -> repository.getFollowersUsers(id) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val followingList: StateFlow<List<UserEntity>> = _currentUserId
+        .flatMapLatest { id -> repository.getFollowingUsers(id) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     // UI Dialog & Sheet states
     private val _showCreateRoomModal = MutableStateFlow(false)
     val showCreateRoomModal: StateFlow<Boolean> = _showCreateRoomModal.asStateFlow()
@@ -161,6 +183,24 @@ class StarKingViewModel(application: Application) : AndroidViewModel(application
 
     private val _showAuthModal = MutableStateFlow(false)
     val showAuthModal: StateFlow<Boolean> = _showAuthModal.asStateFlow()
+
+    private val _showHostDashboard = MutableStateFlow(false)
+    val showHostDashboard: StateFlow<Boolean> = _showHostDashboard.asStateFlow()
+
+    private val _showAgencyDashboard = MutableStateFlow(false)
+    val showAgencyDashboard: StateFlow<Boolean> = _showAgencyDashboard.asStateFlow()
+
+    private val _showLedgerDialog = MutableStateFlow(false)
+    val showLedgerDialog: StateFlow<Boolean> = _showLedgerDialog.asStateFlow()
+
+    private val _showFollowListDialog = MutableStateFlow(false)
+    val showFollowListDialog: StateFlow<Boolean> = _showFollowListDialog.asStateFlow()
+
+    private val _followListTitle = MutableStateFlow("Followers")
+    val followListTitle: StateFlow<String> = _followListTitle.asStateFlow()
+
+    private val _showEditProfileModal = MutableStateFlow(false)
+    val showEditProfileModal: StateFlow<Boolean> = _showEditProfileModal.asStateFlow()
 
     private val _inspectingUser = MutableStateFlow<UserEntity?>(null)
     val inspectingUser: StateFlow<UserEntity?> = _inspectingUser.asStateFlow()
@@ -232,6 +272,70 @@ class StarKingViewModel(application: Application) : AndroidViewModel(application
 
     fun openAuth() { _showAuthModal.value = true }
     fun closeAuth() { _showAuthModal.value = false }
+
+    fun openHostDashboard() { _showHostDashboard.value = true }
+    fun closeHostDashboard() { _showHostDashboard.value = false }
+
+    fun openAgencyDashboard() { _showAgencyDashboard.value = true }
+    fun closeAgencyDashboard() { _showAgencyDashboard.value = false }
+
+    fun openLedger() { _showLedgerDialog.value = true }
+    fun closeLedger() { _showLedgerDialog.value = false }
+
+    fun openFollowersList() {
+        _followListTitle.value = "Followers"
+        _showFollowListDialog.value = true
+    }
+    fun openFollowingList() {
+        _followListTitle.value = "Following"
+        _showFollowListDialog.value = true
+    }
+    fun closeFollowList() { _showFollowListDialog.value = false }
+
+    fun openEditProfile() { _showEditProfileModal.value = true }
+    fun closeEditProfile() { _showEditProfileModal.value = false }
+
+    fun raiseHand() {
+        val roomId = _activeRoomId.value ?: return
+        val user = currentUser.value ?: return
+        viewModelScope.launch {
+            repository.raiseHand(roomId, user)
+            showToast("Raised hand to speak ✋")
+        }
+    }
+
+    fun cancelHandRaise() {
+        val roomId = _activeRoomId.value ?: return
+        val user = currentUser.value ?: return
+        viewModelScope.launch {
+            repository.cancelHandRaise(roomId, user.userId)
+            showToast("Hand raise cancelled")
+        }
+    }
+
+    fun acceptHandRaise(targetUser: UserEntity, seatIndex: Int) {
+        val roomId = _activeRoomId.value ?: return
+        viewModelScope.launch {
+            val result = repository.acceptHandRaise(roomId, targetUser, seatIndex)
+            if (result.isSuccess) {
+                showToast("Invited ${targetUser.nickname} to seat #${seatIndex + 1} 🎙️")
+            } else {
+                showToast(result.exceptionOrNull()?.message ?: "Could not assign seat")
+            }
+        }
+    }
+
+    fun convertDiamondsToCoins(amount: Long) {
+        val user = currentUser.value ?: return
+        viewModelScope.launch {
+            val res = repository.convertDiamondsToCoins(user.userId, amount)
+            if (res.isSuccess) {
+                showToast("Converted $amount diamonds into ${res.getOrNull()} coins! 🪙")
+            } else {
+                showToast(res.exceptionOrNull()?.message ?: "Conversion failed")
+            }
+        }
+    }
 
     fun inspectUser(user: UserEntity?) { _inspectingUser.value = user }
 
@@ -559,11 +663,121 @@ class StarKingViewModel(application: Application) : AndroidViewModel(application
                 country = country,
                 dob = dob,
                 language = language,
-                bio = bio
+                bio = bio,
+                deviceInfo = authManager.getDeviceInfo(),
+                sessionId = authManager.generateSessionId()
             )
             _currentUserId.value = newUser.userId
             closeAuth()
             showToast("Registered! Permanent Star King ID: ${newUser.userId} 🌟")
+        }
+    }
+
+    fun loginWithGoogle(
+        activity: Activity,
+        onRequireProfileSetup: (AuthResult) -> Unit
+    ) {
+        viewModelScope.launch {
+            val result = authManager.signInWithGoogle(activity)
+            if (result.success) {
+                val existing = repository.findUserByAuthIdentifier(result.identifier)
+                if (existing != null) {
+                    _currentUserId.value = existing.userId
+                    closeAuth()
+                    showToast("Welcome back, ${existing.nickname}! (ID: ${existing.userId}) 🌟")
+                } else {
+                    onRequireProfileSetup(result)
+                }
+            } else {
+                showToast(result.errorMessage ?: "Google Sign-In failed")
+            }
+        }
+    }
+
+    fun sendPhoneOtp(activity: Activity, phoneNumber: String) {
+        authManager.sendPhoneOtp(activity, phoneNumber)
+    }
+
+    fun verifyPhoneOtp(
+        otpCode: String,
+        onRequireProfileSetup: (AuthResult) -> Unit
+    ) {
+        viewModelScope.launch {
+            val result = authManager.verifyOtp(otpCode)
+            if (result.success) {
+                val existing = repository.findUserByAuthIdentifier(result.identifier)
+                if (existing != null) {
+                    _currentUserId.value = existing.userId
+                    closeAuth()
+                    showToast("Welcome back, ${existing.nickname}! (ID: ${existing.userId}) 🌟")
+                } else {
+                    onRequireProfileSetup(result)
+                }
+            } else {
+                showToast(result.errorMessage ?: "Invalid OTP verification code")
+            }
+        }
+    }
+
+    fun loginAsGuest(onRequireProfileSetup: (AuthResult) -> Unit) {
+        val guestAuth = authManager.signInAsGuest()
+        onRequireProfileSetup(guestAuth)
+    }
+
+    fun completeRegistrationWithProfile(
+        authResult: AuthResult?,
+        nickname: String,
+        gender: String,
+        country: String,
+        dob: String,
+        language: String,
+        bio: String,
+        avatarUrl: String
+    ) {
+        viewModelScope.launch {
+            val provider = authResult?.provider ?: "GUEST"
+            val identifier = authResult?.identifier ?: ""
+            val deviceInfo = authManager.getDeviceInfo()
+            val sessionId = authManager.generateSessionId()
+
+            val newUser = repository.registerUser(
+                nickname = nickname,
+                gender = gender,
+                country = country,
+                dob = dob,
+                language = language,
+                bio = bio,
+                avatarUrl = avatarUrl,
+                authProvider = provider,
+                authIdentifier = identifier,
+                deviceInfo = deviceInfo,
+                sessionId = sessionId
+            )
+            _currentUserId.value = newUser.userId
+            closeAuth()
+            showToast("Welcome to Star King! Your permanent User ID is ${newUser.userId} 🌟 (1,000 Coins Credited)")
+        }
+    }
+
+    fun logoutCurrentUser() {
+        viewModelScope.launch {
+            val uid = _currentUserId.value
+            exitRoom()
+            repository.logoutUser(uid)
+            authManager.logout()
+            showToast("Logged out successfully.")
+            openAuth()
+        }
+    }
+
+    fun deleteCurrentUserAccount() {
+        viewModelScope.launch {
+            val uid = _currentUserId.value
+            exitRoom()
+            repository.deleteAccount(uid)
+            authManager.logout()
+            showToast("Account deleted. All personal data removed.")
+            openAuth()
         }
     }
 

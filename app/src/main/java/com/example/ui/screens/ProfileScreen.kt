@@ -37,6 +37,12 @@ fun ProfileScreen(
     onOpenSettings: () -> Unit,
     onOpenAdminDashboard: () -> Unit,
     onOpenAuth: () -> Unit,
+    onOpenFollowers: () -> Unit,
+    onOpenFollowing: () -> Unit,
+    onOpenEditProfile: () -> Unit,
+    onOpenLedger: () -> Unit,
+    onOpenHostDashboard: () -> Unit,
+    onOpenAgencyDashboard: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val userRole = try { UserRole.valueOf(user?.role ?: "USER") } catch (_: Exception) { UserRole.USER }
@@ -114,11 +120,20 @@ fun ProfileScreen(
                             )
                         }
 
-                        IconButton(
-                            onClick = onOpenSettings,
-                            modifier = Modifier.size(36.dp).testTag("profile_settings_btn")
-                        ) {
-                            Icon(Icons.Default.Settings, contentDescription = "Settings", tint = TextWhite)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(
+                                onClick = onOpenEditProfile,
+                                modifier = Modifier.size(34.dp).testTag("profile_edit_btn")
+                            ) {
+                                Icon(Icons.Default.Edit, contentDescription = "Edit Profile", tint = StarGoldPrimary, modifier = Modifier.size(18.dp))
+                            }
+
+                            IconButton(
+                                onClick = onOpenSettings,
+                                modifier = Modifier.size(34.dp).testTag("profile_settings_btn")
+                            ) {
+                                Icon(Icons.Default.Settings, contentDescription = "Settings", tint = TextWhite, modifier = Modifier.size(18.dp))
+                            }
                         }
                     }
 
@@ -137,9 +152,20 @@ fun ProfileScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceAround
                     ) {
-                        ProfileStatItem(label = "Followers", value = "${user?.followersCount ?: 0}")
-                        ProfileStatItem(label = "Following", value = "${user?.followingCount ?: 0}")
-                        ProfileStatItem(label = "Gifts Received", value = "${user?.giftsReceivedCount ?: 0}")
+                        ProfileStatItem(
+                            label = "Followers",
+                            value = "${user?.followersCount ?: 0}",
+                            onClick = onOpenFollowers
+                        )
+                        ProfileStatItem(
+                            label = "Following",
+                            value = "${user?.followingCount ?: 0}",
+                            onClick = onOpenFollowing
+                        )
+                        ProfileStatItem(
+                            label = "Gifts Received",
+                            value = "${user?.giftsReceivedCount ?: 0}"
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -298,6 +324,27 @@ fun ProfileScreen(
                 )
                 HorizontalDivider(color = StarKingCardBorder, thickness = 0.5.dp)
                 ProfileMenuRow(
+                    icon = Icons.Default.ReceiptLong,
+                    title = "Wallet Transaction Ledger",
+                    subtitle = "Detailed recharge, gift and reward records",
+                    onClick = onOpenLedger
+                )
+                HorizontalDivider(color = StarKingCardBorder, thickness = 0.5.dp)
+                ProfileMenuRow(
+                    icon = Icons.Default.RecordVoiceOver,
+                    title = "Star Host Center",
+                    subtitle = "Host hours, room visits & diamond earnings",
+                    onClick = onOpenHostDashboard
+                )
+                HorizontalDivider(color = StarKingCardBorder, thickness = 0.5.dp)
+                ProfileMenuRow(
+                    icon = Icons.Default.Domain,
+                    title = "Agency Guild",
+                    subtitle = "Official creator talent agencies and guilds",
+                    onClick = onOpenAgencyDashboard
+                )
+                HorizontalDivider(color = StarKingCardBorder, thickness = 0.5.dp)
+                ProfileMenuRow(
                     icon = Icons.Default.SupportAgent,
                     title = "Official Customer Support",
                     subtitle = "Ticket inquiries, recharge & room guidance",
@@ -316,10 +363,19 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun ProfileStatItem(label: String, value: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+private fun ProfileStatItem(
+    label: String,
+    value: String,
+    onClick: (() -> Unit)? = null
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+    ) {
         Text(text = value, color = TextWhite, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-        Text(text = label, color = TextMuted, fontSize = 11.sp)
+        Text(text = label, color = StarGoldLight, fontSize = 11.sp)
     }
 }
 

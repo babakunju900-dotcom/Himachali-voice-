@@ -47,5 +47,10 @@ data class UserEntity(
     val followersCount: Int = 0,
     val followingCount: Int = 0,
     val giftsReceivedCount: Int = 0,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val authProvider: String = "GUEST", // GOOGLE, PHONE, GUEST
+    val authIdentifier: String = "",    // Email or Phone number
+    val sessionId: String = "",
+    val deviceInfo: String = "",
+    val lastLoginAt: Long = System.currentTimeMillis()
 )

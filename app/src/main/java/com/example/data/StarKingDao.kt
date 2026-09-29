@@ -32,8 +32,23 @@ interface StarKingDao {
     @Update
     suspend fun updateUser(user: UserEntity)
 
+    @Query("SELECT * FROM users WHERE authIdentifier = :identifier LIMIT 1")
+    suspend fun getUserByAuthIdentifier(identifier: String): UserEntity?
+
     @Query("DELETE FROM users WHERE userId = :userId")
     suspend fun deleteUser(userId: Long)
+
+    @Query("DELETE FROM wallets WHERE userId = :userId")
+    suspend fun deleteWallet(userId: Long)
+
+    @Query("DELETE FROM wallet_transactions WHERE userId = :userId")
+    suspend fun deleteWalletTransactions(userId: Long)
+
+    @Query("DELETE FROM follows WHERE followerUserId = :userId OR followingUserId = :userId")
+    suspend fun deleteFollowsForUser(userId: Long)
+
+    @Query("DELETE FROM user_customizations WHERE userId = :userId")
+    suspend fun deleteUserCustomizations(userId: Long)
 
     @Query("SELECT COUNT(*) FROM users")
     suspend fun getUserCount(): Int
@@ -101,6 +116,9 @@ interface StarKingDao {
     @Query("UPDATE room_seats SET userId = NULL, userName = NULL, userAvatar = NULL, isSpeaking = 0 WHERE roomId = :roomId AND userId = :userId")
     suspend fun clearUserFromSeats(roomId: Long, userId: Long)
 
+    @Query("UPDATE room_seats SET userId = NULL, userName = NULL, userAvatar = NULL, isSpeaking = 0 WHERE userId = :userId")
+    suspend fun clearUserFromAllSeats(userId: Long)
+
     @Query("UPDATE room_seats SET isSpeaking = :isSpeaking WHERE roomId = :roomId AND userId = :userId")
     suspend fun updateSeatSpeakingState(roomId: Long, userId: Long, isSpeaking: Boolean)
 
@@ -142,6 +160,19 @@ interface StarKingDao {
     @Query("SELECT SUM(totalCoins) FROM gift_transactions")
     suspend fun getTotalPlatformGiftCoins(): Long?
 
+    // --- Hand Raises ---
+    @Query("SELECT * FROM room_hand_raises WHERE roomId = :roomId ORDER BY timestamp ASC")
+    fun getHandRaisesForRoom(roomId: Long): Flow<List<RoomHandRaiseEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertHandRaise(raise: RoomHandRaiseEntity)
+
+    @Query("DELETE FROM room_hand_raises WHERE roomId = :roomId AND userId = :userId")
+    suspend fun deleteHandRaise(roomId: Long, userId: Long)
+
+    @Query("DELETE FROM room_hand_raises WHERE roomId = :roomId")
+    suspend fun clearHandRaisesForRoom(roomId: Long)
+
     // --- Follows ---
     @Query("SELECT COUNT(*) FROM follows WHERE followerUserId = :followerId AND followingUserId = :followingId")
     fun isFollowing(followerId: Long, followingId: Long): Flow<Int>
@@ -157,6 +188,12 @@ interface StarKingDao {
 
     @Query("SELECT followingUserId FROM follows WHERE followerUserId = :userId")
     fun getFollowingIds(userId: Long): Flow<List<Long>>
+
+    @Query("SELECT u.* FROM users u INNER JOIN follows f ON u.userId = f.followerUserId WHERE f.followingUserId = :userId")
+    fun getFollowersUsers(userId: Long): Flow<List<UserEntity>>
+
+    @Query("SELECT u.* FROM users u INNER JOIN follows f ON u.userId = f.followingUserId WHERE f.followerUserId = :userId")
+    fun getFollowingUsers(userId: Long): Flow<List<UserEntity>>
 
     // --- Store & VIP ---
     @Query("SELECT * FROM coin_packages WHERE isActive = 1 ORDER BY coins ASC")
