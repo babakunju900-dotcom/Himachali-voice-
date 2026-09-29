@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Royal Star & Crown Emblem within 66dp safe zone (21dp to 87dp) -->
+    
+    <!-- Crown at top of Star -->
+    <path
+        android:pathData="M37,34 L43,43 L54,30 L65,43 L71,34 L69,48 L39,48 Z"
+        android:fillColor="#FFD700" />
+
+    <!-- Crown Jewels -->
+    <path
+        android:pathData="M37,33 A2,2 0 1,0 37,33.1 Z M54,29 A2.5,2.5 0 1,0 54,29.1 Z M71,33 A2,2 0 1,0 71,33.1 Z"
+        android:fillColor="#FFF4B8" />
+
+    <!-- Main Star Body -->
+    <path
+        android:pathData="M54,42 L58.5,52.5 L69.5,53.5 L61,61 L63.5,72 L54,66 L44.5,72 L47,61 L38.5,53.5 L49.5,52.5 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="54"
+                android:startY="38"
+                android:endX="54"
+                android:endY="74"
+                android:type="linear">
+                <item android:color="#FFF8D6" android:offset="0.0" />
+                <item android:color="#FFC107" android:offset="0.5" />
+                <item android:color="#FFA000" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Center Microphone / Audio Wave Icon inside Star -->
+    <path
+        android:pathData="M51.5,51 C51.5,49.6 52.6,48.5 54,48.5 C55.4,48.5 56.5,49.6 56.5,51 L56.5,56 C56.5,57.4 55.4,58.5 54,58.5 C52.6,58.5 51.5,57.4 51.5,56 Z"
+        android:fillColor="#1B1736" />
+    <path
+        android:pathData="M49,54 C49,56.8 51.2,59 54,59 C56.8,59 59,54 59,54 M54,59 L54,62 M51,62 L57,62"
+        android:strokeColor="#1B1736"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round" />
+
+    <!-- Soundwave Arcs on Sides -->
+    <path
+        android:pathData="M31,52 C29,56 29,62 31,66 M25,48 C22,55 22,65 25,72"
+        android:strokeColor="#FFD54F"
+        android:strokeWidth="2"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M77,52 C79,56 79,62 77,66 M83,48 C86,55 86,65 83,72"
+        android:strokeColor="#FFD54F"
+        android:strokeWidth="2"
+        android:strokeLineCap="round" />
+
+    <!-- Base Ribbon / Accent -->
+    <path
+        android:pathData="M36,78 L54,82 L72,78 L68,85 L54,87 L40,85 Z"
+        android:fillColor="#FFB300" />
+</vector>

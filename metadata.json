@@ -1,0 +1,6 @@
+{
+  "name": "Star King Voice Chat",
+  "description": "Star King Voice Chat - Connect, Talk, Party & Make Friends with real-time voice rooms, virtual gifting, VIP privileges, and creator communities.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
