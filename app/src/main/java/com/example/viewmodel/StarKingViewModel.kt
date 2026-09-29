@@ -15,16 +15,17 @@ import kotlinx.coroutines.launch
 
 enum class BottomNavTab {
     HOME,
-    ROOMS,
-    EVENTS,
+    SQUARE,
+    MOMENT,
     MESSAGES,
     PROFILE
 }
 
 class StarKingViewModel(application: Application) : AndroidViewModel(application) {
 
+    val firestoreService = FirestoreProfileService(application)
     private val database = StarKingDatabase.getDatabase(application, viewModelScope)
-    private val repository = StarKingRepository(database.starKingDao())
+    private val repository = StarKingRepository(database.starKingDao(), firestoreService)
     val voiceEngine = StarKingVoiceEngine(application)
     val authManager = StarKingAuthManager(application)
     val phoneOtpState: StateFlow<PhoneOtpState> = authManager.phoneOtpState
@@ -101,6 +102,18 @@ class StarKingViewModel(application: Application) : AndroidViewModel(application
     val storeCustomizations: StateFlow<List<StoreCustomizationEntity>> = repository.getStoreCustomizations()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val userCustomizations: StateFlow<List<UserCustomizationEntity>> = _currentUserId
+        .flatMapLatest { id -> repository.getUserCustomizations(id) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // Firestore live user profile & accumulated medals
+    val firestoreUserProfile: StateFlow<FirestoreUserProfile?> = _currentUserId
+        .flatMapLatest { id -> firestoreService.observeProfile(id) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    private val _isFirestoreSyncing = MutableStateFlow(false)
+    val isFirestoreSyncing: StateFlow<Boolean> = _isFirestoreSyncing.asStateFlow()
+
     val allEvents: StateFlow<List<EventEntity>> = repository.getAllEvents()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -129,6 +142,148 @@ class StarKingViewModel(application: Application) : AndroidViewModel(application
     val recentPrivateConversations: StateFlow<List<ChatMessageEntity>> = _currentUserId
         .flatMapLatest { myId -> repository.getRecentPrivateConversations(myId) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // --- Moment Feed & Recommended Topics ---
+    private val _momentTopics = MutableStateFlow(
+        listOf(
+            MomentTopic(
+                hashtag = "# selfie",
+                participationCount = "443.3k",
+                isHot = true,
+                previewIcons = listOf("📸", "✨", "🥰", "🤳")
+            ),
+            MomentTopic(
+                hashtag = "# Mood________",
+                participationCount = "520.6k",
+                isHot = true,
+                previewIcons = listOf("🎶", "☕", "🌧️", "💭")
+            ),
+            MomentTopic(
+                hashtag = "# VoiceChat",
+                participationCount = "310.2k",
+                isHot = true,
+                previewIcons = listOf("🎙️", "👑", "🚀", "💎")
+            ),
+            MomentTopic(
+                hashtag = "# Anime",
+                participationCount = "293.8k",
+                isHot = false,
+                previewIcons = listOf("🦊", "⚔️", "🌸", "⭐")
+            )
+        )
+    )
+    val momentTopics: StateFlow<List<MomentTopic>> = _momentTopics.asStateFlow()
+
+    private val _moments = MutableStateFlow(
+        listOf(
+            MomentEntity(
+                id = "moment_1",
+                userId = 100001L,
+                authorName = "COOL + Nafaa ✨",
+                authorAvatar = "avatar_1",
+                authorGender = "Female",
+                vipTier = 4,
+                badgeTag = "COOL",
+                timestampText = "Just now",
+                caption = "🥰🥰🥰🥰🥰 Join our festival night voice party in Room #68! Special gift shower for top fans 🚀👑",
+                images = listOf("room_festival_1", "room_gift_shower"),
+                likesCount = 128,
+                isLiked = false,
+                commentsCount = 24,
+                isFollowing = false,
+                hashtag = "# Mood________"
+            ),
+            MomentEntity(
+                id = "moment_2",
+                userId = 100002L,
+                authorName = "💔🍁goodby🍁",
+                authorAvatar = "avatar_2",
+                authorGender = "Male",
+                vipTier = 2,
+                badgeTag = "HOT",
+                timestampText = "5m ago",
+                caption = "Late night chill & acoustic music vibes with the team 🎸🎤 Come say hi!",
+                images = listOf("room_chill_music"),
+                likesCount = 94,
+                isLiked = false,
+                commentsCount = 13,
+                isFollowing = true,
+                hashtag = "# selfie"
+            ),
+            MomentEntity(
+                id = "moment_3",
+                userId = 100003L,
+                authorName = "Princess Yashi 🌸",
+                authorAvatar = "avatar_3",
+                authorGender = "Female",
+                vipTier = 5,
+                badgeTag = "VIP",
+                timestampText = "12m ago",
+                caption = "Thank you so much to all my gifters tonight for the Diamond Agency crown! Love you all 💖✨",
+                images = listOf("room_stage_yashi"),
+                likesCount = 312,
+                isLiked = true,
+                commentsCount = 48,
+                isFollowing = false,
+                hashtag = "# VoiceChat"
+            )
+        )
+    )
+    val moments: StateFlow<List<MomentEntity>> = _moments.asStateFlow()
+
+    fun likeMoment(momentId: String) {
+        _moments.value = _moments.value.map { m ->
+            if (m.id == momentId) {
+                val newLiked = !m.isLiked
+                m.copy(
+                    isLiked = newLiked,
+                    likesCount = if (newLiked) m.likesCount + 1 else maxOf(0, m.likesCount - 1)
+                )
+            } else m
+        }
+    }
+
+    fun followUserFromMoment(targetUserId: Long) {
+        _moments.value = _moments.value.map { m ->
+            if (m.userId == targetUserId) {
+                val newFollowing = !m.isFollowing
+                m.copy(isFollowing = newFollowing)
+            } else m
+        }
+        toggleFollow(targetUserId)
+    }
+
+    fun postMomentComment(momentId: String, text: String) {
+        _moments.value = _moments.value.map { m ->
+            if (m.id == momentId) {
+                m.copy(commentsCount = m.commentsCount + 1)
+            } else m
+        }
+        showToast("Comment posted! 💬")
+    }
+
+    fun createMoment(caption: String, hashtag: String) {
+        val user = currentUser.value
+        val newMoment = MomentEntity(
+            id = "moment_${System.currentTimeMillis()}",
+            userId = user?.userId ?: 504094L,
+            authorName = user?.nickname ?: "Star King User",
+            authorAvatar = user?.avatarUrl ?: "avatar_user",
+            authorGender = user?.gender ?: "Female",
+            vipTier = user?.vipTier ?: 1,
+            badgeTag = "NEW",
+            timestampText = "Just now",
+            caption = caption,
+            images = listOf("room_festival_1"),
+            likesCount = 0,
+            isLiked = false,
+            commentsCount = 0,
+            isFollowing = false,
+            hashtag = hashtag
+        )
+        _moments.value = listOf(newMoment) + _moments.value
+        showToast("Moment published to feed! 📸")
+    }
 
     // Moderation & Support
     val mySupportTickets: StateFlow<List<SupportTicketEntity>> = _currentUserId
@@ -201,6 +356,18 @@ class StarKingViewModel(application: Application) : AndroidViewModel(application
 
     private val _showEditProfileModal = MutableStateFlow(false)
     val showEditProfileModal: StateFlow<Boolean> = _showEditProfileModal.asStateFlow()
+
+    private val _showProfilePhotoUpload = MutableStateFlow(false)
+    val showProfilePhotoUpload: StateFlow<Boolean> = _showProfilePhotoUpload.asStateFlow()
+
+    private val _showRoomCoverUpload = MutableStateFlow(false)
+    val showRoomCoverUpload: StateFlow<Boolean> = _showRoomCoverUpload.asStateFlow()
+
+    fun openProfilePhotoUpload() { _showProfilePhotoUpload.value = true }
+    fun closeProfilePhotoUpload() { _showProfilePhotoUpload.value = false }
+
+    fun openRoomCoverUpload() { _showRoomCoverUpload.value = true }
+    fun closeRoomCoverUpload() { _showRoomCoverUpload.value = false }
 
     private val _inspectingUser = MutableStateFlow<UserEntity?>(null)
     val inspectingUser: StateFlow<UserEntity?> = _inspectingUser.asStateFlow()
@@ -465,7 +632,8 @@ class StarKingViewModel(application: Application) : AndroidViewModel(application
         seatCount: Int,
         welcomeMsg: String,
         isPrivate: Boolean,
-        password: String
+        password: String,
+        coverPhotoUrl: String = ""
     ) {
         val user = currentUser.value ?: return
         viewModelScope.launch {
@@ -478,11 +646,38 @@ class StarKingViewModel(application: Application) : AndroidViewModel(application
                 seatCount = seatCount,
                 welcomeMsg = welcomeMsg,
                 isPrivate = isPrivate,
-                password = password
+                password = password,
+                coverPhotoUrl = coverPhotoUrl
             )
             closeCreateRoom()
             enterRoom(created.roomId)
             showToast("Room created! ID: ${created.roomId} 🌟")
+        }
+    }
+
+    fun updateRoomCoverPhoto(roomId: Long, newCoverUrl: String) {
+        viewModelScope.launch {
+            repository.updateRoomCoverPhoto(roomId, newCoverUrl)
+            showToast("Room cover updated successfully! 🖼️")
+        }
+    }
+
+    fun updateUserProfilePhoto(newAvatarUrl: String) {
+        val user = currentUser.value ?: return
+        viewModelScope.launch {
+            repository.updateUserProfilePhoto(user.userId, newAvatarUrl)
+            showToast("Profile photo updated successfully! 📸")
+        }
+    }
+
+    fun removeFakeOrInvalidRoom(roomId: Long) {
+        if (roomId == 708101L) {
+            showToast("Cannot remove ⭐ Star Voice Customer Support official room!")
+            return
+        }
+        viewModelScope.launch {
+            repository.deleteRoomPermanently(roomId)
+            showToast("Invalid/fake room removed from community.")
         }
     }
 
@@ -531,6 +726,36 @@ class StarKingViewModel(application: Application) : AndroidViewModel(application
                 showToast("Customization equipped! 🌟")
             } else {
                 showToast(result.exceptionOrNull()?.message ?: "Purchase failed")
+            }
+        }
+    }
+
+    fun equipStoreItem(itemId: String) {
+        val user = currentUser.value ?: return
+        viewModelScope.launch {
+            val result = repository.equipCustomization(user.userId, itemId)
+            if (result.isSuccess) {
+                showToast("Medal / Customization equipped! 🎖️")
+                syncProfileWithFirestore()
+            } else {
+                showToast(result.exceptionOrNull()?.message ?: "Equip failed")
+            }
+        }
+    }
+
+    fun syncProfileWithFirestore() {
+        val user = currentUser.value ?: return
+        val medals = userCustomizations.value
+            .filter { it.itemId.startsWith("medal_") }
+            .map { it.itemId }
+        viewModelScope.launch {
+            _isFirestoreSyncing.value = true
+            val success = firestoreService.syncProfileToFirestore(user, medals)
+            _isFirestoreSyncing.value = false
+            if (success) {
+                showToast("Profile & Medals synced with Cloud Firestore ☁️")
+            } else {
+                showToast("Profile updated locally. Cloud sync pending connectivity.")
             }
         }
     }
@@ -690,6 +915,24 @@ class StarKingViewModel(application: Application) : AndroidViewModel(application
                 }
             } else {
                 showToast(result.errorMessage ?: "Google Sign-In failed")
+            }
+        }
+    }
+
+    fun loginWithGoogleEmail(
+        email: String,
+        name: String,
+        onRequireProfileSetup: (AuthResult) -> Unit
+    ) {
+        viewModelScope.launch {
+            val result = authManager.signInWithGoogleEmail(email, name)
+            val existing = repository.findUserByAuthIdentifier(result.identifier)
+            if (existing != null) {
+                _currentUserId.value = existing.userId
+                closeAuth()
+                showToast("Welcome back, ${existing.nickname}! (ID: ${existing.userId}) 🌟")
+            } else {
+                onRequireProfileSetup(result)
             }
         }
     }

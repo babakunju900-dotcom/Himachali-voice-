@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.model.UserEntity
 import com.example.ui.components.AvatarView
+import com.example.ui.components.PhotoUploadModerationDialog
 import com.example.ui.theme.*
 
 @Composable
@@ -36,6 +38,7 @@ fun EditProfileDialog(
     var gender by remember { mutableStateOf(user?.gender ?: "Star") }
     var country by remember { mutableStateOf(user?.country ?: "United States") }
     var selectedAvatar by remember { mutableStateOf(user?.avatarUrl ?: "avatar_user") }
+    var showPhotoUploadDialog by remember { mutableStateOf(false) }
 
     val avatars = listOf("avatar_user", "avatar_crown", "avatar_aria", "avatar_viktor", "avatar_layla", "avatar_support")
     val genders = listOf("Male", "Female", "Star")
@@ -67,12 +70,59 @@ fun EditProfileDialog(
             Spacer(modifier = Modifier.height(14.dp))
 
             LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                // Avatar Picker
+                // Direct Device / Gallery Photo Upload Card
                 item {
-                    Text(text = "Choose Avatar", color = TextMuted, fontSize = 12.sp)
+                    Text(text = "Profile Photo (Direct Upload)", color = TextMuted, fontSize = 12.sp)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(StarKingSurfaceVariantDark)
+                            .border(1.dp, StarGoldPrimary.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
+                            .clickable { showPhotoUploadDialog = true }
+                            .padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(contentAlignment = Alignment.BottomEnd) {
+                            AvatarView(
+                                avatarUrl = selectedAvatar,
+                                nickname = nickname.ifEmpty { "User" },
+                                size = 64.dp
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .clip(CircleShape)
+                                    .background(StarGoldPrimary),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.PhotoCamera,
+                                    contentDescription = "Upload",
+                                    tint = StarKingBgDark,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.width(14.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Upload Photo from Gallery 📸", color = TextWhite, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            Text("AI safety inspection automatically verifies photo in real time", color = TextChampagne, fontSize = 11.sp)
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text("Tap to select photo >", color = StarGoldPrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+
+                // Avatar Presets Picker
+                item {
+                    Text(text = "Or Choose Preset Avatar", color = TextMuted, fontSize = 12.sp)
                     Spacer(modifier = Modifier.height(6.dp))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         items(avatars) { av ->
@@ -108,7 +158,7 @@ fun EditProfileDialog(
                             unfocusedTextColor = TextWhite
                         ),
                         shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth().testTag("edit_nickname_input")
                     )
                 }
 
@@ -118,7 +168,8 @@ fun EditProfileDialog(
                         value = bio,
                         onValueChange = { bio = it },
                         label = { Text("Bio", color = TextMuted) },
-                        minLines = 2,
+                        placeholder = { Text("Tell everyone what you love to talk about 🌟", color = TextSecondary) },
+                        maxLines = 3,
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = StarGoldPrimary,
                             unfocusedBorderColor = StarKingCardBorder,
@@ -130,11 +181,11 @@ fun EditProfileDialog(
                     )
                 }
 
-                // Gender
+                // Gender Selection
                 item {
                     Text(text = "Gender", color = TextMuted, fontSize = 12.sp)
                     Spacer(modifier = Modifier.height(6.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         genders.forEach { g ->
                             val isSelected = g == gender
                             Box(
@@ -142,9 +193,14 @@ fun EditProfileDialog(
                                     .clip(RoundedCornerShape(10.dp))
                                     .background(if (isSelected) StarGoldPrimary else StarKingSurfaceVariantDark)
                                     .clickable { gender = g }
-                                    .padding(horizontal = 14.dp, vertical = 6.dp)
+                                    .padding(horizontal = 16.dp, vertical = 8.dp)
                             ) {
-                                Text(text = g, color = if (isSelected) StarKingBgDark else TextWhite, fontWeight = FontWeight.Bold)
+                                Text(
+                                    text = g,
+                                    color = if (isSelected) StarKingBgDark else TextWhite,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    fontSize = 12.sp
+                                )
                             }
                         }
                     }
@@ -155,7 +211,7 @@ fun EditProfileDialog(
                     OutlinedTextField(
                         value = country,
                         onValueChange = { country = it },
-                        label = { Text("Country / Region", color = TextMuted) },
+                        label = { Text("Country", color = TextMuted) },
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = StarGoldPrimary,
@@ -168,22 +224,39 @@ fun EditProfileDialog(
                     )
                 }
 
-                // Save Button
                 item {
                     Spacer(modifier = Modifier.height(10.dp))
                     Button(
                         onClick = {
-                            onSave(nickname, bio, gender, country, selectedAvatar)
-                            onDismiss()
+                            onSave(nickname.ifEmpty { "StarUser" }, bio, gender, country, selectedAvatar)
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = StarGoldPrimary, contentColor = StarKingBgDark),
                         shape = RoundedCornerShape(14.dp),
-                        modifier = Modifier.fillMaxWidth().height(48.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .testTag("save_profile_btn")
                     ) {
-                        Text("Save Profile Changes", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        Text("Save Profile Changes 💾", fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     }
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
             }
         }
+    }
+
+    // Direct Photo Upload Dialog with Automatic Safety Moderation
+    if (showPhotoUploadDialog) {
+        PhotoUploadModerationDialog(
+            title = "Upload Profile Photo",
+            subtitle = "Select your profile photo from your device. Real-time automatic safety moderation checks against inappropriate or explicit imagery.",
+            isCircularPreview = true,
+            currentPhotoUrl = selectedAvatar,
+            onDismiss = { showPhotoUploadDialog = false },
+            onPhotoApprovedAndSaved = { approvedUri ->
+                selectedAvatar = approvedUri
+                showPhotoUploadDialog = false
+            }
+        )
     }
 }

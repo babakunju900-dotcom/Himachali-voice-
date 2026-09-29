@@ -17,6 +17,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -122,6 +125,13 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
     val showFollowListDialog by viewModel.showFollowListDialog.collectAsStateWithLifecycle()
     val followListTitle by viewModel.followListTitle.collectAsStateWithLifecycle()
     val showEditProfileModal by viewModel.showEditProfileModal.collectAsStateWithLifecycle()
+    val userCustomizations by viewModel.userCustomizations.collectAsStateWithLifecycle()
+    val firestoreUserProfile by viewModel.firestoreUserProfile.collectAsStateWithLifecycle()
+    val isFirestoreSyncing by viewModel.isFirestoreSyncing.collectAsStateWithLifecycle()
+    val moments by viewModel.moments.collectAsStateWithLifecycle()
+    val momentTopics by viewModel.momentTopics.collectAsStateWithLifecycle()
+    val showProfilePhotoUpload by viewModel.showProfilePhotoUpload.collectAsStateWithLifecycle()
+    var showStarVoicePromoModal by remember { mutableStateOf(false) }
 
     // Toast listener
     LaunchedEffect(toastMessage) {
@@ -199,7 +209,7 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                             unreadNotifications = unreadNotifs,
                             onAvatarClick = { viewModel.setTab(BottomNavTab.PROFILE) },
                             onCoinClick = { viewModel.openRecharge() },
-                            onSearchClick = { viewModel.setTab(BottomNavTab.ROOMS) },
+                            onSearchClick = { viewModel.setTab(BottomNavTab.SQUARE) },
                             onNotificationClick = {
                                 viewModel.markNotificationsRead()
                                 viewModel.setTab(BottomNavTab.MESSAGES)
@@ -216,51 +226,82 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                                 .windowInsetsPadding(WindowInsets.navigationBars)
                                 .testTag("main_bottom_nav")
                         ) {
+                            // 1. Home
                             NavigationBarItem(
                                 selected = currentTab == BottomNavTab.HOME,
                                 onClick = { viewModel.setTab(BottomNavTab.HOME) },
                                 icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-                                label = { Text("HOME", fontSize = 10.sp, fontWeight = FontWeight.Bold) },
+                                label = { Text("Home", fontSize = 11.sp, fontWeight = if (currentTab == BottomNavTab.HOME) FontWeight.Bold else FontWeight.Normal) },
                                 colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = StarKingBgDark,
-                                    selectedTextColor = StarGoldPrimary,
-                                    indicatorColor = StarGoldPrimary,
+                                    selectedIconColor = Color(0xFFFF2B6D),
+                                    selectedTextColor = Color(0xFFFF2B6D),
+                                    indicatorColor = Color.Transparent,
                                     unselectedIconColor = TextMuted,
                                     unselectedTextColor = TextMuted
                                 ),
                                 modifier = Modifier.testTag("tab_home")
                             )
 
+                            // 2. Square (Rooms & Discovery)
                             NavigationBarItem(
-                                selected = currentTab == BottomNavTab.ROOMS,
-                                onClick = { viewModel.setTab(BottomNavTab.ROOMS) },
-                                icon = { Icon(Icons.Default.Mic, contentDescription = "Rooms") },
-                                label = { Text("ROOMS", fontSize = 10.sp, fontWeight = FontWeight.Bold) },
+                                selected = currentTab == BottomNavTab.SQUARE,
+                                onClick = { viewModel.setTab(BottomNavTab.SQUARE) },
+                                icon = { Icon(Icons.Default.Explore, contentDescription = "Square") },
+                                label = { Text("Square", fontSize = 11.sp, fontWeight = if (currentTab == BottomNavTab.SQUARE) FontWeight.Bold else FontWeight.Normal) },
                                 colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = StarKingBgDark,
-                                    selectedTextColor = StarGoldPrimary,
-                                    indicatorColor = StarGoldPrimary,
+                                    selectedIconColor = Color(0xFFFF2B6D),
+                                    selectedTextColor = Color(0xFFFF2B6D),
+                                    indicatorColor = Color.Transparent,
                                     unselectedIconColor = TextMuted,
                                     unselectedTextColor = TextMuted
                                 ),
-                                modifier = Modifier.testTag("tab_rooms")
+                                modifier = Modifier.testTag("tab_square")
                             )
 
+                            // 3. Moment (Center Capsule Action Button as seen in screenshots)
                             NavigationBarItem(
-                                selected = currentTab == BottomNavTab.EVENTS,
-                                onClick = { viewModel.setTab(BottomNavTab.EVENTS) },
-                                icon = { Icon(Icons.Default.EmojiEvents, contentDescription = "Events") },
-                                label = { Text("EVENTS", fontSize = 10.sp, fontWeight = FontWeight.Bold) },
+                                selected = currentTab == BottomNavTab.MOMENT,
+                                onClick = { viewModel.setTab(BottomNavTab.MOMENT) },
+                                icon = {
+                                    Box(
+                                        modifier = Modifier
+                                            .width(46.dp)
+                                            .height(28.dp)
+                                            .clip(RoundedCornerShape(14.dp))
+                                            .background(
+                                                Brush.horizontalGradient(
+                                                    listOf(Color(0xFFFF2B6D), Color(0xFFFF5252))
+                                                )
+                                            ),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        // Sound wave lines: |ıı|ıı|
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(2.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Box(modifier = Modifier.width(2.dp).height(12.dp).background(Color.White, RoundedCornerShape(1.dp)))
+                                            Box(modifier = Modifier.width(2.dp).height(6.dp).background(Color.White, RoundedCornerShape(1.dp)))
+                                            Box(modifier = Modifier.width(2.dp).height(8.dp).background(Color.White, RoundedCornerShape(1.dp)))
+                                            Box(modifier = Modifier.width(2.dp).height(14.dp).background(Color.White, RoundedCornerShape(1.dp)))
+                                            Box(modifier = Modifier.width(2.dp).height(6.dp).background(Color.White, RoundedCornerShape(1.dp)))
+                                            Box(modifier = Modifier.width(2.dp).height(10.dp).background(Color.White, RoundedCornerShape(1.dp)))
+                                            Box(modifier = Modifier.width(2.dp).height(12.dp).background(Color.White, RoundedCornerShape(1.dp)))
+                                        }
+                                    }
+                                },
+                                label = { Text("Moment", fontSize = 11.sp, fontWeight = if (currentTab == BottomNavTab.MOMENT) FontWeight.Bold else FontWeight.Normal) },
                                 colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = StarKingBgDark,
-                                    selectedTextColor = StarGoldPrimary,
-                                    indicatorColor = StarGoldPrimary,
+                                    selectedIconColor = Color(0xFFFF2B6D),
+                                    selectedTextColor = Color(0xFFFF2B6D),
+                                    indicatorColor = Color.Transparent,
                                     unselectedIconColor = TextMuted,
                                     unselectedTextColor = TextMuted
                                 ),
-                                modifier = Modifier.testTag("tab_events")
+                                modifier = Modifier.testTag("tab_moment")
                             )
 
+                            // 4. Message
                             NavigationBarItem(
                                 selected = currentTab == BottomNavTab.MESSAGES,
                                 onClick = { viewModel.setTab(BottomNavTab.MESSAGES) },
@@ -274,29 +315,30 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                                             }
                                         }
                                     ) {
-                                        Icon(Icons.Default.ChatBubble, contentDescription = "Messages")
+                                        Icon(Icons.Default.ChatBubble, contentDescription = "Message")
                                     }
                                 },
-                                label = { Text("MESSAGES", fontSize = 10.sp, fontWeight = FontWeight.Bold) },
+                                label = { Text("Message", fontSize = 11.sp, fontWeight = if (currentTab == BottomNavTab.MESSAGES) FontWeight.Bold else FontWeight.Normal) },
                                 colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = StarKingBgDark,
-                                    selectedTextColor = StarGoldPrimary,
-                                    indicatorColor = StarGoldPrimary,
+                                    selectedIconColor = Color(0xFFFF2B6D),
+                                    selectedTextColor = Color(0xFFFF2B6D),
+                                    indicatorColor = Color.Transparent,
                                     unselectedIconColor = TextMuted,
                                     unselectedTextColor = TextMuted
                                 ),
                                 modifier = Modifier.testTag("tab_messages")
                             )
 
+                            // 5. Me (Profile)
                             NavigationBarItem(
                                 selected = currentTab == BottomNavTab.PROFILE,
                                 onClick = { viewModel.setTab(BottomNavTab.PROFILE) },
-                                icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
-                                label = { Text("PROFILE", fontSize = 10.sp, fontWeight = FontWeight.Bold) },
+                                icon = { Icon(Icons.Default.Person, contentDescription = "Me") },
+                                label = { Text("Me", fontSize = 11.sp, fontWeight = if (currentTab == BottomNavTab.PROFILE) FontWeight.Bold else FontWeight.Normal) },
                                 colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = StarKingBgDark,
-                                    selectedTextColor = StarGoldPrimary,
-                                    indicatorColor = StarGoldPrimary,
+                                    selectedIconColor = Color(0xFFFF2B6D),
+                                    selectedTextColor = Color(0xFFFF2B6D),
+                                    indicatorColor = Color.Transparent,
                                     unselectedIconColor = TextMuted,
                                     unselectedTextColor = TextMuted
                                 ),
@@ -317,10 +359,11 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                                     onRoomClick = { room -> viewModel.enterRoom(room.roomId) },
                                     onHostClick = { host -> viewModel.inspectUser(host) },
                                     onCreateRoomClick = { viewModel.openCreateRoom() },
-                                    onEventBannerClick = { viewModel.setTab(BottomNavTab.EVENTS) }
+                                    onEventBannerClick = { viewModel.setTab(BottomNavTab.SQUARE) },
+                                    onStarVoiceBannerClick = { showStarVoicePromoModal = true }
                                 )
                             }
-                            BottomNavTab.ROOMS -> {
+                            BottomNavTab.SQUARE -> {
                                 RoomsScreen(
                                     rooms = liveRooms,
                                     searchQuery = searchQuery,
@@ -331,11 +374,14 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                                     onCreateRoomClick = { viewModel.openCreateRoom() }
                                 )
                             }
-                            BottomNavTab.EVENTS -> {
-                                EventsLeaderboardScreen(
-                                    topHosts = topHosts,
-                                    events = allEvents,
-                                    onHostClick = { host -> viewModel.inspectUser(host) }
+                            BottomNavTab.MOMENT -> {
+                                MomentScreen(
+                                    moments = moments,
+                                    topics = momentTopics,
+                                    onLikeMoment = { momentId -> viewModel.likeMoment(momentId) },
+                                    onFollowUser = { userId -> viewModel.followUserFromMoment(userId) },
+                                    onPostComment = { momentId, text -> viewModel.postMomentComment(momentId, text) },
+                                    onCreateMoment = { caption, hashtag -> viewModel.createMoment(caption, hashtag) }
                                 )
                             }
                             BottomNavTab.MESSAGES -> {
@@ -350,6 +396,12 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                                 ProfileScreen(
                                     user = currentUser,
                                     wallet = currentWallet,
+                                    firestoreProfile = firestoreUserProfile,
+                                    isFirestoreSyncing = isFirestoreSyncing,
+                                    userCustomizations = userCustomizations,
+                                    storeMedals = storeCustomizations.filter { it.type == "MEDAL" },
+                                    onSyncFirestore = { viewModel.syncProfileWithFirestore() },
+                                    onEquipMedal = { medalId -> viewModel.equipStoreItem(medalId) },
                                     onRechargeClick = { viewModel.openRecharge() },
                                     onOpenStore = { viewModel.openStore() },
                                     onOpenSupport = { viewModel.openSupport() },
@@ -372,6 +424,21 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
 
         // --- MODALS & BOTTOM SHEETS ---
 
+        // STAR Voice Chat Promotional Welcome Dialog
+        if (showStarVoicePromoModal) {
+            StarVoiceChatPromotionDialog(
+                onDismiss = { showStarVoicePromoModal = false },
+                onEnterVoiceRooms = {
+                    showStarVoicePromoModal = false
+                    viewModel.setTab(BottomNavTab.SQUARE)
+                },
+                onClaimRewards = {
+                    viewModel.rechargeCoins("pkg_coins_500")
+                    viewModel.showToast("🎁 Claimed 500 Welcome Coins from STAR Voice Chat & NEXUS!")
+                }
+            )
+        }
+
         // In-Room Gift Bottom Sheet
         if (showGiftDrawer && activeRoom != null) {
             GiftBottomSheet(
@@ -392,8 +459,8 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
         if (showCreateRoomModal) {
             CreateRoomDialog(
                 onDismiss = { viewModel.closeCreateRoom() },
-                onCreateRoom = { name, desc, cat, lang, seats, welcome, isPrivate, pass ->
-                    viewModel.createRoom(name, desc, cat, lang, seats, welcome, isPrivate, pass)
+                onCreateRoom = { name, desc, cat, lang, seats, welcome, isPrivate, pass, coverUrl ->
+                    viewModel.createRoom(name, desc, cat, lang, seats, welcome, isPrivate, pass, coverUrl)
                 }
             )
         }
@@ -408,14 +475,17 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
             )
         }
 
-        // Customization Store Sheet
+        // Customization Store Sheet & Medal Wall
         if (showStoreModal) {
             CustomizationStoreScreen(
                 items = storeCustomizations,
                 vipPlans = vipPlans,
+                userCustomizations = userCustomizations,
                 userCoinBalance = currentWallet?.coinBalance ?: 0L,
+                currentUserBadge = currentUser?.equippedBadge ?: "",
                 onDismiss = { viewModel.closeStore() },
                 onPurchaseItem = { itemId -> viewModel.purchaseStoreItem(itemId) },
+                onEquipItem = { itemId -> viewModel.equipStoreItem(itemId) },
                 onPurchaseVip = { planId -> viewModel.purchaseVip(planId) }
             )
         }
@@ -477,6 +547,9 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                     activity?.let { act ->
                         viewModel.loginWithGoogle(act, onProfileNeeded)
                     }
+                },
+                onGoogleEmailSignIn = { email, name, onProfileNeeded ->
+                    viewModel.loginWithGoogleEmail(email, name, onProfileNeeded)
                 },
                 onSendPhoneOtp = { phone ->
                     activity?.let { act ->
@@ -629,6 +702,21 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                 onDismiss = { viewModel.closeEditProfile() },
                 onSave = { nick, bio, gender, country, avatar ->
                     viewModel.updateMyProfile(nick, bio, gender, country, avatar)
+                }
+            )
+        }
+
+        // Direct Profile Photo Upload & Real-Time Moderation Dialog
+        if (showProfilePhotoUpload) {
+            PhotoUploadModerationDialog(
+                title = "Update Profile Photo",
+                subtitle = "Select a photo from your gallery. All uploads undergo automatic real-time safety inspection.",
+                isCircularPreview = true,
+                currentPhotoUrl = currentUser?.avatarUrl ?: "",
+                onDismiss = { viewModel.closeProfilePhotoUpload() },
+                onPhotoApprovedAndSaved = { approvedUri ->
+                    viewModel.updateUserProfilePhoto(approvedUri)
+                    viewModel.closeProfilePhotoUpload()
                 }
             )
         }

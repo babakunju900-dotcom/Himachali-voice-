@@ -35,7 +35,7 @@ import kotlinx.coroutines.launch
         NotificationEntity::class,
         AppSettingEntity::class
     ],
-    version = 1,
+    version = 3,
     exportSchema = false
 )
 abstract class StarKingDatabase : RoomDatabase() {
@@ -46,15 +46,58 @@ abstract class StarKingDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: StarKingDatabase? = null
 
+        val MIGRATION_2_3 = object : androidx.room.migration.Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                try {
+                    db.execSQL("ALTER TABLE rooms ADD COLUMN coverPhotoUrl TEXT NOT NULL DEFAULT ''")
+                } catch (_: Exception) {}
+            }
+        }
+
+        val MIGRATION_1_2 = object : androidx.room.migration.Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                try {
+                    db.execSQL("ALTER TABLE users ADD COLUMN authProvider TEXT NOT NULL DEFAULT 'GUEST'")
+                } catch (_: Exception) {}
+                try {
+                    db.execSQL("ALTER TABLE users ADD COLUMN authIdentifier TEXT NOT NULL DEFAULT ''")
+                } catch (_: Exception) {}
+                try {
+                    db.execSQL("ALTER TABLE users ADD COLUMN sessionId TEXT NOT NULL DEFAULT ''")
+                } catch (_: Exception) {}
+                try {
+                    db.execSQL("ALTER TABLE users ADD COLUMN deviceInfo TEXT NOT NULL DEFAULT ''")
+                } catch (_: Exception) {}
+                try {
+                    db.execSQL("ALTER TABLE users ADD COLUMN lastLoginAt INTEGER NOT NULL DEFAULT 0")
+                } catch (_: Exception) {}
+
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS room_hand_raises (
+                        roomId INTEGER NOT NULL,
+                        userId INTEGER NOT NULL,
+                        userName TEXT NOT NULL,
+                        userAvatar TEXT NOT NULL,
+                        userLevel INTEGER NOT NULL,
+                        userVip INTEGER NOT NULL,
+                        timestamp INTEGER NOT NULL,
+                        PRIMARY KEY(roomId, userId)
+                    )
+                """.trimIndent())
+            }
+        }
+
         fun getDatabase(context: Context, scope: CoroutineScope): StarKingDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     StarKingDatabase::class.java,
-                    "star_king_voice_chat.db"
+                    "star_king_voice_chat_v2.db"
                 )
                     .addCallback(StarKingDatabaseCallback(scope))
-                    .fallbackToDestructiveMigration()
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    .fallbackToDestructiveMigration(true)
+                    .fallbackToDestructiveMigrationOnDowngrade()
                     .build()
                 INSTANCE = instance
                 instance
@@ -70,6 +113,21 @@ abstract class StarKingDatabase : RoomDatabase() {
             INSTANCE?.let { database ->
                 scope.launch(Dispatchers.IO) {
                     populateInitialData(database.starKingDao())
+                }
+            }
+        }
+
+        override fun onOpen(db: SupportSQLiteDatabase) {
+            super.onOpen(db)
+            INSTANCE?.let { database ->
+                scope.launch(Dispatchers.IO) {
+                    try {
+                        if (database.starKingDao().getUserCount() == 0) {
+                            populateInitialData(database.starKingDao())
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
                 }
             }
         }
@@ -219,22 +277,23 @@ abstract class StarKingDatabase : RoomDatabase() {
             dao.insertWallet(WalletEntity(userId = 503442L, coinBalance = 32000L, diamondBalance = 4100L))
             dao.insertWallet(WalletEntity(userId = 504890L, coinBalance = 120000L, diamondBalance = 19500L))
 
-            // Seed Initial Real Rooms
+            // Seed Permanent Official Customer Support Room & Authentic Community Rooms
             val room1 = RoomEntity(
                 roomId = 708101L,
-                name = "🌟 Star King Official Support & Guidance",
-                description = "Official customer support room. Talk to verified agents and get help.",
-                coverEmoji = "🛡️",
+                name = "⭐ Star Voice Customer Support",
+                description = "Permanent Official 24/7 Customer Support Room for Star Voice. Talk to authorized Star Voice staff for instant account, coin recharge, gift, or safety assistance.",
+                coverEmoji = "⭐",
+                coverPhotoUrl = "official_support_logo",
                 category = "Official",
                 language = "English",
                 country = "Global",
                 seatCount = 8,
-                welcomeMessage = "Welcome to Official Support. Please respect staff and state your ticket inquiry.",
+                welcomeMessage = "⭐ Welcome to Star Voice Customer Support. Authorized staff are active to assist you. Respect staff and community guidelines.",
                 hostUserId = 100001L,
-                hostName = "Star King Official",
+                hostName = "Star Voice Customer Support",
                 hostAvatar = "avatar_crown",
                 isLive = true,
-                onlineCount = 42,
+                onlineCount = 85,
                 totalGiftsValue = 120000L
             )
 
@@ -344,14 +403,16 @@ abstract class StarKingDatabase : RoomDatabase() {
             // Seed Gifts
             val gifts = listOf(
                 GiftEntity("gift_rose", "Rose", "🌹", "Popular", 10L, "FLOAT"),
-                GiftEntity("gift_heart", "Love Heart", "💖", "Popular", 50L, "BURST"),
+                GiftEntity("gift_heart", "Love Heart", "💖", "Love", 50L, "BURST"),
                 GiftEntity("gift_confetti", "Party Popper", "🎉", "Popular", 100L, "BURST"),
                 GiftEntity("gift_star", "Star Charm", "⭐", "Star", 200L, "FLOAT"),
                 GiftEntity("gift_balloon", "Love Balloon", "🎈", "Love", 500L, "FLOAT"),
                 GiftEntity("gift_ring", "Diamond Ring", "💍", "Love", 1000L, "BURST"),
-                GiftEntity("gift_teddy", "Golden Teddy", "🧸", "Love", 2000L, "BURST"),
+                GiftEntity("gift_bouquet", "Flower Bouquet", "💐", "Love", 1500L, "BURST"),
+                GiftEntity("gift_teddy", "Golden Teddy", "🧸", "Popular", 2000L, "BURST"),
                 GiftEntity("gift_gold_star", "Royal Star", "🌟", "Star", 5000L, "BURST"),
                 GiftEntity("gift_crown", "King Crown", "👑", "Luxury", 10000L, "CROWN"),
+                GiftEntity("gift_rocket", "Cosmic Rocket", "🚀", "Luxury", 15000L, "BURST"),
                 GiftEntity("gift_scepter", "Star Scepter", "🪄", "Luxury", 25000L, "CROWN"),
                 GiftEntity("gift_car", "Sports Car", "🏎️", "Luxury", 50000L, "CAR"),
                 GiftEntity("gift_yacht", "Mega Yacht", "🛥️", "Luxury", 100000L, "GALAXY"),
@@ -378,8 +439,33 @@ abstract class StarKingDatabase : RoomDatabase() {
             )
             dao.insertVipPlans(vipPlans)
 
-            // Seed Customization Store Items
+            // Seed Customization Store Items & Medals
             val storeItems = listOf(
+                // 22 Medals matching user screenshots
+                StoreCustomizationEntity("medal_king", "King", "MEDAL", "👑", 15000L, 365),
+                StoreCustomizationEntity("medal_official", "Official", "MEDAL", "⭐", 10000L, 365),
+                StoreCustomizationEntity("medal_dream_wedding", "Dream wedding", "MEDAL", "💛", 12000L, 365),
+                StoreCustomizationEntity("medal_assistant", "Assistant", "MEDAL", "👤", 8000L, 365),
+                StoreCustomizationEntity("medal_service_team", "Service team", "MEDAL", "🎧", 6000L, 365),
+                StoreCustomizationEntity("medal_love_day", "Love day", "MEDAL", "💖", 7000L, 365),
+                StoreCustomizationEntity("medal_best_friend", "Best friend", "MEDAL", "🤝", 5000L, 365),
+                StoreCustomizationEntity("medal_snack", "Snack", "MEDAL", "🐉", 9000L, 365),
+                StoreCustomizationEntity("medal_millionaire", "Millionaire", "MEDAL", "💎", 25000L, 365),
+                StoreCustomizationEntity("medal_friendship_maker", "Friendship Maker", "MEDAL", "🤝", 6500L, 365),
+                StoreCustomizationEntity("medal_rocket1", "Rocket 1", "MEDAL", "🚀", 14000L, 365),
+                StoreCustomizationEntity("medal_bd", "BD", "MEDAL", "🛡️", 8500L, 365),
+                StoreCustomizationEntity("medal_coin_seller", "Coin seller", "MEDAL", "💲", 11000L, 365),
+                StoreCustomizationEntity("medal_tiger_king", "Tiger king", "MEDAL", "🐯", 16000L, 365),
+                StoreCustomizationEntity("medal_30day_top", "30 day monthly top", "MEDAL", "🏆", 20000L, 365),
+                StoreCustomizationEntity("medal_100m", "100M", "MEDAL", "🦁", 30000L, 365),
+                StoreCustomizationEntity("medal_cs_admin", "CS Admin", "MEDAL", "👩‍💼", 12000L, 365),
+                StoreCustomizationEntity("medal_first_recharge", "First recharge", "MEDAL", "💵", 3000L, 365),
+                StoreCustomizationEntity("medal_official_team", "Official team", "MEDAL", "👔", 18000L, 365),
+                StoreCustomizationEntity("medal_winner", "Winner", "MEDAL", "🏆", 13000L, 365),
+                StoreCustomizationEntity("medal_lucky_777", "Lucky 777 Pro", "MEDAL", "🎰", 15000L, 365),
+                StoreCustomizationEntity("medal_expert", "Medal Expert", "MEDAL", "🎖️", 10000L, 365),
+
+                // Frames & Badges
                 StoreCustomizationEntity("frame_gold_star", "Gold Star Frame", "FRAME", "🌟", 5000L, 30),
                 StoreCustomizationEntity("frame_crown", "Royal Crown Frame", "FRAME", "👑", 12000L, 30),
                 StoreCustomizationEntity("frame_galaxy", "Galaxy Aura Frame", "FRAME", "🌌", 15000L, 30),
@@ -391,6 +477,17 @@ abstract class StarKingDatabase : RoomDatabase() {
                 StoreCustomizationEntity("vehicle_dragon", "Cosmic Phoenix", "VEHICLE", "🦅", 50000L, 30)
             )
             dao.insertStoreCustomizations(storeItems)
+
+            // Pre-seed User 504094L with owned medals
+            val defaultOwnedCustomizations = listOf(
+                UserCustomizationEntity(504094L, "medal_king", isEquipped = true, expiresAt = System.currentTimeMillis() + 86400000L * 365),
+                UserCustomizationEntity(504094L, "medal_official", isEquipped = false, expiresAt = System.currentTimeMillis() + 86400000L * 365),
+                UserCustomizationEntity(504094L, "medal_best_friend", isEquipped = false, expiresAt = System.currentTimeMillis() + 86400000L * 365),
+                UserCustomizationEntity(504094L, "frame_gold_star", isEquipped = true, expiresAt = System.currentTimeMillis() + 86400000L * 30)
+            )
+            for (custom in defaultOwnedCustomizations) {
+                dao.insertUserCustomization(custom)
+            }
 
             // Seed Events
             val events = listOf(

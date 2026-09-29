@@ -108,6 +108,7 @@ fun AvatarView(
                 else -> Brush.linearGradient(listOf(Color(0xFF283593), RoyalPurple))
             }
 
+            val isCustomImage = avatarUrl.startsWith("content://") || avatarUrl.startsWith("file://") || avatarUrl.startsWith("http")
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
@@ -115,12 +116,21 @@ fun AvatarView(
                     .clip(CircleShape)
                     .background(avatarBg)
             ) {
-                Text(
-                    text = initials,
-                    color = TextWhite,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = (size.value * 0.38f).sp
-                )
+                if (isCustomImage) {
+                    coil.compose.AsyncImage(
+                        model = avatarUrl,
+                        contentDescription = nickname,
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Text(
+                        text = initials,
+                        color = TextWhite,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = (size.value * 0.38f).sp
+                    )
+                }
             }
         }
 

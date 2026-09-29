@@ -9,6 +9,7 @@ data class RoomEntity(
     val name: String,
     val description: String,
     val coverEmoji: String = "🎙️",
+    val coverPhotoUrl: String = "",
     val category: String = "Party", // Party, Music, Chat, Gaming, Dating, Poetry, Official
     val language: String = "English",
     val country: String = "Global",

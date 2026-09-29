@@ -254,11 +254,12 @@ fun VoiceRoomScreen(
                 modifier = Modifier.padding(horizontal = 8.dp)
             )
 
-            // --- ANIMATED GIFT OVERLAY ---
+            // --- LOTTIE-BASED ANIMATED GIFT OVERLAY ---
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(60.dp),
+                    .wrapContentHeight()
+                    .padding(vertical = 4.dp),
                 contentAlignment = Alignment.Center
             ) {
                 GiftAnimationOverlay(giftTx = activeGiftTx)

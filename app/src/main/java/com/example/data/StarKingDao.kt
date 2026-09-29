@@ -32,6 +32,12 @@ interface StarKingDao {
     @Update
     suspend fun updateUser(user: UserEntity)
 
+    @Query("UPDATE users SET avatarUrl = :avatarUrl WHERE userId = :userId")
+    suspend fun updateUserAvatar(userId: Long, avatarUrl: String)
+
+    @Query("UPDATE rooms SET coverPhotoUrl = :coverPhotoUrl WHERE roomId = :roomId")
+    suspend fun updateRoomCoverPhoto(roomId: Long, coverPhotoUrl: String)
+
     @Query("SELECT * FROM users WHERE authIdentifier = :identifier LIMIT 1")
     suspend fun getUserByAuthIdentifier(identifier: String): UserEntity?
 
@@ -214,11 +220,17 @@ interface StarKingDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertStoreCustomizations(items: List<StoreCustomizationEntity>)
 
+    @Query("SELECT * FROM store_customizations WHERE id = :id LIMIT 1")
+    suspend fun getStoreCustomizationById(id: String): StoreCustomizationEntity?
+
     @Query("SELECT * FROM user_customizations WHERE userId = :userId")
     fun getUserCustomizations(userId: Long): Flow<List<UserCustomizationEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertUserCustomization(customization: UserCustomizationEntity)
+
+    @Query("UPDATE user_customizations SET isEquipped = 0 WHERE userId = :userId")
+    suspend fun unequipAllUserCustomizations(userId: Long)
 
     // --- Events & Agencies ---
     @Query("SELECT * FROM events WHERE isActive = 1 ORDER BY endDate ASC")

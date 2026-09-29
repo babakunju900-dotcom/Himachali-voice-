@@ -47,11 +47,14 @@ fun AuthRegistrationScreen(
         avatarUrl: String
     ) -> Unit,
     onQuickSwitchUser: (Long) -> Unit,
+    onGoogleEmailSignIn: ((email: String, name: String, onProfileNeeded: (AuthResult) -> Unit) -> Unit)? = null,
     deviceInfo: String = "Android Device",
     modifier: Modifier = Modifier
 ) {
     var mode by remember { mutableStateOf("LOGIN") } // "LOGIN", "PHONE_OTP", "PROFILE_SETUP"
     var currentPendingAuth by remember { mutableStateOf<AuthResult?>(null) }
+    var showGoogleDialog by remember { mutableStateOf(false) }
+    var googleEmailInput by remember { mutableStateOf("babakunju900@gmail.com") }
 
     // Registration Profile Fields
     var nickname by remember { mutableStateOf("StarKing" + Random.nextInt(100, 999)) }
@@ -188,13 +191,7 @@ fun AuthRegistrationScreen(
                         // Google Sign-In button
                         item {
                             Button(
-                                onClick = {
-                                    onGoogleSignIn { authRes ->
-                                        currentPendingAuth = authRes
-                                        nickname = authRes.displayName.ifBlank { "StarUser" }
-                                        mode = "PROFILE_SETUP"
-                                    }
-                                },
+                                onClick = { showGoogleDialog = true },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = StarKingSurfaceVariantDark,
                                     contentColor = TextWhite
@@ -842,6 +839,93 @@ fun AuthRegistrationScreen(
                         }
                     }
                 }
+            }
+
+            // Google Sign-In Chooser Dialog
+            if (showGoogleDialog) {
+                AlertDialog(
+                    onDismissRequest = { showGoogleDialog = false },
+                    containerColor = StarKingSurfaceDark,
+                    shape = RoundedCornerShape(18.dp),
+                    title = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("🌐", fontSize = 20.sp)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Google Sign-In", color = TextWhite, fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                        }
+                    },
+                    text = {
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Text(
+                                text = "Sign in using your Google account to connect with Star King voice rooms and sync your numeric User ID.",
+                                color = TextMuted,
+                                fontSize = 12.sp,
+                                lineHeight = 16.sp
+                            )
+
+                            OutlinedTextField(
+                                value = googleEmailInput,
+                                onValueChange = { googleEmailInput = it },
+                                label = { Text("Google Account Email", color = TextMuted) },
+                                singleLine = true,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = StarGoldPrimary,
+                                    unfocusedBorderColor = StarKingCardBorder,
+                                    focusedTextColor = TextWhite,
+                                    unfocusedTextColor = TextWhite
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            Button(
+                                onClick = {
+                                    showGoogleDialog = false
+                                    if (onGoogleEmailSignIn != null) {
+                                        onGoogleEmailSignIn.invoke(googleEmailInput, googleEmailInput.substringBefore("@")) { authRes ->
+                                            currentPendingAuth = authRes
+                                            nickname = authRes.displayName.ifBlank { "StarUser" }
+                                            mode = "PROFILE_SETUP"
+                                        }
+                                    } else {
+                                        onGoogleSignIn { authRes ->
+                                            currentPendingAuth = authRes
+                                            nickname = authRes.displayName.ifBlank { "StarUser" }
+                                            mode = "PROFILE_SETUP"
+                                        }
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = StarGoldPrimary, contentColor = StarKingBgDark),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth().height(46.dp)
+                            ) {
+                                Text("Continue with Google Email", fontWeight = FontWeight.Bold)
+                            }
+
+                            Button(
+                                onClick = {
+                                    showGoogleDialog = false
+                                    onGoogleSignIn { authRes ->
+                                        currentPendingAuth = authRes
+                                        nickname = authRes.displayName.ifBlank { "StarUser" }
+                                        mode = "PROFILE_SETUP"
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = StarKingSurfaceVariantDark),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth().height(42.dp)
+                            ) {
+                                Text("⚡ One-Tap Fast Sign-In", color = TextWhite, fontSize = 12.sp)
+                            }
+                        }
+                    },
+                    confirmButton = {},
+                    dismissButton = {
+                        TextButton(onClick = { showGoogleDialog = false }) {
+                            Text("Cancel", color = TextMuted)
+                        }
+                    }
+                )
             }
         }
     }

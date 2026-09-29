@@ -16,7 +16,10 @@ data class PlatformStats(
     val pendingReports: Int
 )
 
-class StarKingRepository(private val dao: StarKingDao) {
+class StarKingRepository(
+    private val dao: StarKingDao,
+    val firestoreService: FirestoreProfileService? = null
+) {
 
     // --- Users ---
     fun getUser(userId: Long): Flow<UserEntity?> = dao.getUserById(userId)
@@ -383,7 +386,7 @@ class StarKingRepository(private val dao: StarKingDao) {
 
         val updatedUser = when (item.type) {
             "FRAME" -> user.copy(equippedFrame = item.name)
-            "BADGE" -> user.copy(equippedBadge = item.name)
+            "BADGE", "MEDAL" -> user.copy(equippedBadge = item.name)
             "TITLE" -> user.copy(equippedTitle = item.name)
             else -> user
         }
@@ -410,6 +413,32 @@ class StarKingRepository(private val dao: StarKingDao) {
         Result.success(true)
     }
 
+    suspend fun equipCustomization(userId: Long, itemId: String): Result<Boolean> = withContext(Dispatchers.IO) {
+        val item = dao.getStoreCustomizationById(itemId)
+            ?: return@withContext Result.failure(Exception("Item not found"))
+        val user = dao.getUserByIdSync(userId)
+            ?: return@withContext Result.failure(Exception("User not found"))
+
+        val updatedUser = when (item.type) {
+            "FRAME" -> user.copy(equippedFrame = item.name)
+            "BADGE", "MEDAL" -> user.copy(equippedBadge = item.name)
+            "TITLE" -> user.copy(equippedTitle = item.name)
+            else -> user
+        }
+        dao.updateUser(updatedUser)
+
+        dao.insertUserCustomization(
+            UserCustomizationEntity(
+                userId = userId,
+                itemId = itemId,
+                isEquipped = true,
+                expiresAt = System.currentTimeMillis() + (365L * 86400000L)
+            )
+        )
+
+        Result.success(true)
+    }
+
     // --- Rooms ---
     fun getLiveRooms(): Flow<List<RoomEntity>> = dao.getLiveRooms()
     fun getRoom(roomId: Long): Flow<RoomEntity?> = dao.getRoomById(roomId)
@@ -426,7 +455,8 @@ class StarKingRepository(private val dao: StarKingDao) {
         welcomeMsg: String,
         isPrivate: Boolean,
         password: String,
-        coverEmoji: String = "🎙️"
+        coverEmoji: String = "🎙️",
+        coverPhotoUrl: String = ""
     ): RoomEntity = withContext(Dispatchers.IO) {
         var roomId = 700000L + Random.nextLong(10000, 99999)
         while (dao.getRoomByIdSync(roomId) != null) {
@@ -438,6 +468,7 @@ class StarKingRepository(private val dao: StarKingDao) {
             name = name.trim().ifEmpty { "${hostUser.nickname}'s Voice Party" },
             description = description.trim().ifEmpty { "Join my voice room and party!" },
             coverEmoji = coverEmoji,
+            coverPhotoUrl = coverPhotoUrl,
             category = category,
             language = language,
             country = hostUser.country,
@@ -498,6 +529,18 @@ class StarKingRepository(private val dao: StarKingDao) {
                 )
             )
         }
+
+    suspend fun updateRoomCoverPhoto(roomId: Long, coverPhotoUrl: String) = withContext(Dispatchers.IO) {
+        dao.updateRoomCoverPhoto(roomId, coverPhotoUrl)
+    }
+
+    suspend fun updateUserProfilePhoto(userId: Long, newAvatarUrl: String) = withContext(Dispatchers.IO) {
+        dao.updateUserAvatar(userId, newAvatarUrl)
+    }
+
+    suspend fun deleteRoomPermanently(roomId: Long) = withContext(Dispatchers.IO) {
+        dao.deleteRoom(roomId)
+    }
 
     suspend fun closeRoom(roomId: Long) = withContext(Dispatchers.IO) {
         val room = dao.getRoomByIdSync(roomId) ?: return@withContext

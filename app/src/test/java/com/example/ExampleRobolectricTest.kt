@@ -92,4 +92,126 @@ class ExampleRobolectricTest {
         assertNull(database.starKingDao().getUserByIdSync(user.userId))
         assertNull(database.starKingDao().getWalletSync(user.userId))
     }
+
+    @Test
+    fun `purchase and equip medal updates user badge and customization`() = runBlocking {
+        val user = repository.registerUser(
+            nickname = "MedalMaster",
+            gender = "Star",
+            country = "United States",
+            dob = "2000-01-01",
+            language = "English",
+            bio = "Medal collector",
+            authProvider = "GUEST"
+        )
+
+        val medalKing = com.example.model.StoreCustomizationEntity(
+            id = "medal_king",
+            name = "King",
+            type = "MEDAL",
+            iconOrEmoji = "👑",
+            priceCoins = 500L,
+            durationDays = 365
+        )
+        database.starKingDao().insertStoreCustomizations(listOf(medalKing))
+
+        val purchaseResult = repository.purchaseCustomization(user.userId, "medal_king")
+        assertTrue(purchaseResult.isSuccess)
+
+        val updatedUser = database.starKingDao().getUserByIdSync(user.userId)
+        assertNotNull(updatedUser)
+        assertEquals("King", updatedUser!!.equippedBadge)
+
+        val wallet = database.starKingDao().getWalletSync(user.userId)
+        assertNotNull(wallet)
+        assertEquals(500L, wallet!!.coinBalance)
+    }
+
+    @Test
+    fun `firestore user profile holds accumulated medals display name and picture`() {
+        val medals = listOf("medal_king", "medal_official", "medal_dream_wedding")
+        val firestoreProfile = com.example.data.FirestoreUserProfile(
+            userId = 504094L,
+            displayName = "CloudEmperor 🌟",
+            profilePicture = "avatar_user",
+            bio = "Live voice broadcaster",
+            level = 10,
+            equippedMedal = "King",
+            accumulatedMedals = medals,
+            medalsCount = medals.size
+        )
+
+        assertEquals("CloudEmperor 🌟", firestoreProfile.displayName)
+        assertEquals("avatar_user", firestoreProfile.profilePicture)
+        assertEquals("King", firestoreProfile.equippedMedal)
+        assertEquals(3, firestoreProfile.accumulatedMedals.size)
+        assertTrue(firestoreProfile.accumulatedMedals.contains("medal_king"))
+        assertTrue(firestoreProfile.accumulatedMedals.contains("medal_official"))
+    }
+
+    @Test
+    fun `sendGift to speaker deducts coins and creates transaction for Lottie overlay`() = runBlocking {
+        val sender = repository.registerUser(
+            nickname = "GiftGiver",
+            gender = "Star",
+            country = "Global",
+            dob = "1998-05-05",
+            language = "English",
+            bio = "Love sending gifts",
+            authProvider = "GUEST"
+        )
+
+        val receiver = repository.registerUser(
+            nickname = "TopSpeaker",
+            gender = "Star",
+            country = "Global",
+            dob = "1997-07-07",
+            language = "English",
+            bio = "Voice host",
+            authProvider = "GUEST"
+        )
+
+        val rocketGift = com.example.model.GiftEntity(
+            id = "gift_rocket",
+            name = "Cosmic Rocket",
+            iconEmoji = "🚀",
+            category = "Luxury",
+            coinPrice = 500L,
+            animationType = "BURST"
+        )
+        database.starKingDao().insertGifts(listOf(rocketGift))
+
+        val room = repository.createRoom(
+            hostUser = receiver,
+            name = "Voice Party Live",
+            description = "Welcome all",
+            category = "Music",
+            language = "English",
+            seatCount = 8,
+            welcomeMsg = "Welcome!",
+            isPrivate = false,
+            password = ""
+        )
+
+        val sendResult = repository.sendGift(
+            roomId = room.roomId,
+            senderUser = sender,
+            receiverUserId = receiver.userId,
+            receiverName = receiver.nickname,
+            giftId = "gift_rocket",
+            count = 1
+        )
+
+        assertTrue(sendResult.isSuccess)
+        val giftTx = sendResult.getOrNull()
+        assertNotNull(giftTx)
+        assertEquals("Cosmic Rocket", giftTx!!.giftName)
+        assertEquals("🚀", giftTx.giftIcon)
+        assertEquals(1, giftTx.giftCount)
+        assertEquals(receiver.userId, giftTx.receiverUserId)
+
+        val senderWallet = database.starKingDao().getWalletSync(sender.userId)
+        assertNotNull(senderWallet)
+        assertEquals(500L, senderWallet!!.coinBalance)
+    }
 }
