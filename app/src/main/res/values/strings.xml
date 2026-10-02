@@ -1,3 +1,95 @@
 <resources>
-    <string name="app_name">Star King</string>
+    <string name="app_name">Star King Voice Chat</string>
+
+    <!-- Navigation & Bottom Tabs -->
+    <string name="nav_home">Home</string>
+    <string name="nav_moments">Moments</string>
+    <string name="nav_rooms">Rooms</string>
+    <string name="nav_messages">Messages</string>
+    <string name="nav_profile">Profile</string>
+
+    <!-- Top Navigation Bar -->
+    <string name="tab_people">People</string>
+    <string name="tab_room">Room</string>
+    <string name="tab_game">Game</string>
+    <string name="tab_explore">Explore</string>
+    <string name="content_description_search">Search</string>
+
+    <!-- Subcategories -->
+    <string name="subcat_hot">Hot</string>
+    <string name="subcat_joined">Joined</string>
+    <string name="subcat_talent_show">Talent Show</string>
+    <string name="subcat_game">Game</string>
+    <string name="subcat_dating">Dating</string>
+
+    <!-- Wealth Banner -->
+    <string name="wealth_title">Wealth</string>
+    <string name="wealth_subtitle">Weekly Top Donors 💎</string>
+    <string name="wealth_week_badge">Week</string>
+
+    <!-- Official Support Desk -->
+    <string name="official_verified_desk">OFFICIAL VERIFIED DESK</string>
+    <string name="official_badge_text">OFFICIAL</string>
+    <string name="official_support_default_desc">24/7 Verified Customer Support Desk • Real-time host &amp; agency assistance</string>
+    <string name="live_agents_active">● LIVE AGENTS ACTIVE</string>
+    <string name="online_count_suffix">%1$d online</string>
+
+    <!-- Room Card Badges -->
+    <string name="live_voice_badge">● LIVE VOICE</string>
+
+    <!-- Quick Action Cards -->
+    <string name="cp_dating_title">CP Dating</string>
+    <string name="cp_dating_subtitle">8,846 online</string>
+    <string name="private_call_title">Private Call</string>
+    <string name="private_call_subtitle">Let\'s chat</string>
+
+    <!-- Featured Gala -->
+    <string name="featured_gala_badge">FEATURED GALA 🏆</string>
+    <string name="featured_gala_title">Star King Voice Superstars</string>
+    <string name="featured_gala_subtitle">Win exclusive 3D animated crowns &amp; entrance gifts!</string>
+
+    <!-- Events & Leaderboard Screen -->
+    <string name="tab_leaderboards">🏆 Leaderboards</string>
+    <string name="tab_official_events">🎪 Official Events</string>
+    <string name="timeframe_daily">Daily</string>
+    <string name="timeframe_weekly">Weekly</string>
+    <string name="timeframe_monthly">Monthly</string>
+    <string name="status_active">Status: ACTIVE 🟢</string>
+    <string name="prize_details_heading">🎁 Prize Details:</string>
+    <string name="rank_gold_score">284,500 🪙</string>
+    <string name="rank_silver_score">142,500 🪙</string>
+    <string name="rank_bronze_score">98,200 🪙</string>
+    <string name="rank_score_format">%1$d 🪙</string>
+    <string name="user_id_label">ID: %1$s</string>
+    <string name="user_id_num">ID: %1$d</string>
+
+    <!-- Rooms Screen & Cards -->
+    <string name="host_and_id_label">Host: %1$s • ID: %2$d</string>
+    <string name="room_default_top1">Top Room 1</string>
+    <string name="room_default_top2">Top Room 2</string>
+    <string name="room_default_top3">Top Room 3</string>
+    <string name="room_cover_desc">Room Cover</string>
+    <string name="mic_live_desc">Live</string>
+    <string name="verified_desc">Verified</string>
+    <string name="search_rooms_users_desc">Search Rooms &amp; Users</string>
+    <string name="notifications_desc">Notifications</string>
+    <string name="admin_management_panel">Admin Management Panel</string>
+    <string name="search_rooms_placeholder">Search by Room Name, ID or Host...</string>
+    <string name="official_platform_room_title">Official Platform Room 👑</string>
+    <string name="official_platform_room_desc">Official STAR VOICE 24/7 Verified Support &amp; Inquiries</string>
+    <string name="btn_enter">Enter</string>
+    <string name="category_all">All</string>
+    <string name="category_party">Party</string>
+    <string name="category_music">Music</string>
+    <string name="category_chat">Chat</string>
+    <string name="category_gaming">Gaming</string>
+    <string name="category_official">Official</string>
+    <string name="community_rooms_count">Community Voice Rooms (%1$d)</string>
+    <string name="realtime_updates">Real-time updates ⚡</string>
+    <string name="no_rooms_title">No Voice Rooms in this Category</string>
+    <string name="no_rooms_search_desc">No rooms match \'%1$s\'. Create your own room or search another category!</string>
+    <string name="no_rooms_category_desc">Be the first to start a live voice party in %1$s!</string>
+    <string name="btn_create_voice_room">Create Live Voice Room 🎙️</string>
+    <string name="btn_create_room_desc">Create Room</string>
+    <string name="online_count_badge">👥 %1$d online</string>
 </resources>

@@ -26,7 +26,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import coil.compose.AsyncImage
+import com.example.R
 import com.example.model.RoomEntity
 import com.example.model.UserEntity
 import com.example.ui.components.AvatarView
@@ -44,6 +46,7 @@ fun HomeScreen(
     onHostClick: (UserEntity) -> Unit,
     onCreateRoomClick: () -> Unit,
     onEventBannerClick: () -> Unit,
+    events: List<com.example.model.EventEntity> = emptyList(),
     onStarVoiceBannerClick: () -> Unit = {},
     onCpClick: () -> Unit = {},
     onPrivateCallClick: () -> Unit = {},
@@ -69,55 +72,46 @@ fun HomeScreen(
             .fillMaxSize()
             .background(Color(0xFF141221))
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 90.dp)
-        ) {
+        Column(modifier = Modifier.fillMaxSize()) {
             // --- 1. TOP HEADER NAVIGATION (Matching Screenshot 1) ---
-            // Spiral icon | People | Room (selected) | Game | Explo... | Search
-            item {
-                Row(
+            // Spiral icon | People | Room (selected) | Game | Explore | Search
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Spiral Icon
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 14.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(Brush.radialGradient(listOf(Color(0xFFFF2B6D), Color(0xFF7B1FA2)))),
+                    contentAlignment = Alignment.Center
                 ) {
-                    // Spiral Icon
-                    Box(
-                        modifier = Modifier
-                            .size(34.dp)
-                            .clip(CircleShape)
-                            .background(Brush.radialGradient(listOf(Color(0xFFFF2B6D), Color(0xFF7B1FA2)))),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("🌀", fontSize = 16.sp)
-                    }
+                    Text("🌀", fontSize = 16.sp)
+                }
 
-                    // Top Bar Tabs
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                // Top Bar Tabs with responsive spacing
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // People Tab
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .clickable { topNavTab = "People" }
+                            .padding(vertical = 4.dp)
                     ) {
                         Text(
-                            text = "People",
+                            text = stringResource(R.string.tab_people),
                             color = if (topNavTab == "People") TextWhite else Color(0xFF9E9DB5),
                             fontWeight = if (topNavTab == "People") FontWeight.Bold else FontWeight.Medium,
-                            fontSize = 15.sp,
-                            modifier = Modifier.clickable { topNavTab = "People" }
+                            fontSize = if (topNavTab == "People") 17.sp else 14.sp
                         )
-
-                        // Room (Active)
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.clickable { topNavTab = "Room" }
-                        ) {
-                            Text(
-                                text = "Room",
-                                color = TextWhite,
-                                fontWeight = FontWeight.Black,
-                                fontSize = 19.sp
-                            )
+                        if (topNavTab == "People") {
                             Box(
                                 modifier = Modifier
                                     .padding(top = 2.dp)
@@ -126,14 +120,45 @@ fun HomeScreen(
                                     .background(Color.White)
                             )
                         }
+                    }
 
-                        // Game with red badge dot
-                        Box(modifier = Modifier.clickable { topNavTab = "Game" }) {
+                    // Room Tab (Default)
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .clickable { topNavTab = "Room" }
+                            .padding(vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.tab_room),
+                            color = if (topNavTab == "Room") TextWhite else Color(0xFF9E9DB5),
+                            fontWeight = if (topNavTab == "Room") FontWeight.Black else FontWeight.Medium,
+                            fontSize = if (topNavTab == "Room") 18.sp else 14.sp
+                        )
+                        if (topNavTab == "Room") {
+                            Box(
+                                modifier = Modifier
+                                    .padding(top = 2.dp)
+                                    .size(width = 16.dp, height = 3.dp)
+                                    .clip(RoundedCornerShape(2.dp))
+                                    .background(Color.White)
+                            )
+                        }
+                    }
+
+                    // Game Tab with badge
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .clickable { topNavTab = "Game" }
+                            .padding(vertical = 4.dp)
+                    ) {
+                        Box {
                             Text(
-                                text = "Game",
+                                text = stringResource(R.string.tab_game),
                                 color = if (topNavTab == "Game") TextWhite else Color(0xFF9E9DB5),
                                 fontWeight = if (topNavTab == "Game") FontWeight.Bold else FontWeight.Medium,
-                                fontSize = 15.sp
+                                fontSize = if (topNavTab == "Game") 17.sp else 14.sp
                             )
                             Box(
                                 modifier = Modifier
@@ -143,29 +168,69 @@ fun HomeScreen(
                                     .align(Alignment.TopEnd)
                             )
                         }
+                        if (topNavTab == "Game") {
+                            Box(
+                                modifier = Modifier
+                                    .padding(top = 2.dp)
+                                    .size(width = 16.dp, height = 3.dp)
+                                    .clip(RoundedCornerShape(2.dp))
+                                    .background(Color.White)
+                            )
+                        }
+                    }
 
+                    // Explore Tab
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .clickable { topNavTab = "Explore" }
+                            .padding(vertical = 4.dp)
+                    ) {
                         Text(
-                            text = "Explo...",
+                            text = stringResource(R.string.tab_explore),
                             color = if (topNavTab == "Explore") TextWhite else Color(0xFF9E9DB5),
                             fontWeight = if (topNavTab == "Explore") FontWeight.Bold else FontWeight.Medium,
-                            fontSize = 15.sp,
-                            modifier = Modifier.clickable { topNavTab = "Explore" }
+                            fontSize = if (topNavTab == "Explore") 17.sp else 14.sp
                         )
-                    }
-
-                    // Search Icon
-                    IconButton(
-                        onClick = { },
-                        modifier = Modifier.size(36.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Search,
-                            contentDescription = "Search",
-                            tint = Color(0xFFFF2B6D),
-                            modifier = Modifier.size(24.dp)
-                        )
+                        if (topNavTab == "Explore") {
+                            Box(
+                                modifier = Modifier
+                                    .padding(top = 2.dp)
+                                    .size(width = 16.dp, height = 3.dp)
+                                    .clip(RoundedCornerShape(2.dp))
+                                    .background(Color.White)
+                            )
+                        }
                     }
                 }
+
+                // Search Icon
+                IconButton(
+                    onClick = { },
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Search,
+                        contentDescription = stringResource(R.string.content_description_search),
+                        tint = Color(0xFFFF2B6D),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+
+            if (topNavTab == "Explore") {
+                // Integrated Event & Leaderboards screen
+                EventsLeaderboardScreen(
+                    topHosts = topHosts,
+                    events = events,
+                    onHostClick = onHostClick,
+                    modifier = Modifier.weight(1f)
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(bottom = 90.dp)
+                ) {
             }
 
             // --- 2. SUB-CATEGORY PILLS ROW ---
@@ -180,6 +245,14 @@ fun HomeScreen(
                 ) {
                     subCategories.forEach { subCat ->
                         val isSelected = currentSubCategory == subCat
+                        val localizedLabel = when (subCat) {
+                            "Hot" -> stringResource(R.string.subcat_hot)
+                            "Joined" -> stringResource(R.string.subcat_joined)
+                            "Talent Show" -> stringResource(R.string.subcat_talent_show)
+                            "Game" -> stringResource(R.string.subcat_game)
+                            "Dating" -> stringResource(R.string.subcat_dating)
+                            else -> subCat
+                        }
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier
@@ -187,10 +260,10 @@ fun HomeScreen(
                                     currentSubCategory = subCat
                                     onCategorySelect(subCat)
                                 }
-                                .padding(horizontal = 4.dp, vertical = 2.dp)
+                                .padding(horizontal = 4.dp, vertical = 6.dp)
                         ) {
                             Text(
-                                text = subCat,
+                                text = localizedLabel,
                                 color = if (isSelected) TextWhite else Color(0xFF8C8A9E),
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                 fontSize = 14.sp
@@ -214,7 +287,7 @@ fun HomeScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 14.dp, vertical = 6.dp)
+                        .padding(horizontal = 16.dp, vertical = 6.dp)
                         .clip(RoundedCornerShape(14.dp))
                         .background(
                             Brush.horizontalGradient(
@@ -222,7 +295,10 @@ fun HomeScreen(
                             )
                         )
                         .border(1.dp, Color(0xFFFFB300).copy(alpha = 0.4f), RoundedCornerShape(14.dp))
-                        .clickable { onEventBannerClick() }
+                        .clickable {
+                            topNavTab = "Explore"
+                            onEventBannerClick()
+                        }
                         .padding(horizontal = 12.dp, vertical = 8.dp)
                 ) {
                     Row(
@@ -231,7 +307,10 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         // Left: Golden Trophy / Crown & "Wealth"
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f, fill = false)
+                        ) {
                             Box(
                                 modifier = Modifier
                                     .size(36.dp)
@@ -242,34 +321,40 @@ fun HomeScreen(
                                 Text("👑", fontSize = 18.sp)
                             }
                             Spacer(modifier = Modifier.width(8.dp))
-                            Column {
+                            Column(modifier = Modifier.weight(1f, fill = false)) {
                                 Text(
-                                    text = "Wealth",
+                                    text = stringResource(R.string.wealth_title),
                                     color = Color(0xFFFFECB3),
                                     fontWeight = FontWeight.Black,
-                                    fontSize = 15.sp
+                                    fontSize = 15.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
-                                    text = "Weekly Top Donors 💎",
+                                    text = stringResource(R.string.wealth_subtitle),
                                     color = Color(0xFFFFD54F).copy(alpha = 0.8f),
-                                    fontSize = 10.sp
+                                    fontSize = 10.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
 
+                        Spacer(modifier = Modifier.width(6.dp))
+
                         // Right: Laurel wreaths with #2, #1 (center, crowned), #3
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            Text("🌿", fontSize = 14.sp)
+                            Text("🌿", fontSize = 12.sp)
 
                             // Rank 2
                             val host2 = topHosts.getOrNull(1)
                             AvatarView(
                                 avatarUrl = host2?.avatarUrl ?: "avatar_2",
-                                nickname = host2?.nickname ?: "Top 2",
-                                size = 28.dp,
+                                nickname = host2?.nickname ?: stringResource(R.string.room_default_top2),
+                                size = 26.dp,
                                 vipTier = 2
                             )
 
@@ -279,23 +364,28 @@ fun HomeScreen(
                                 Text("👑", fontSize = 10.sp)
                                 AvatarView(
                                     avatarUrl = host1?.avatarUrl ?: "avatar_1",
-                                    nickname = host1?.nickname ?: "Top 1",
-                                    size = 34.dp,
+                                    nickname = host1?.nickname ?: stringResource(R.string.room_default_top1),
+                                    size = 32.dp,
                                     vipTier = 5
                                 )
-                                Text("Week", color = Color(0xFFFFD54F), fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                                Text(
+                                    text = stringResource(R.string.wealth_week_badge),
+                                    color = Color(0xFFFFD54F),
+                                    fontSize = 8.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
                             }
 
                             // Rank 3
                             val host3 = topHosts.getOrNull(2)
                             AvatarView(
                                 avatarUrl = host3?.avatarUrl ?: "avatar_3",
-                                nickname = host3?.nickname ?: "Top 3",
-                                size = 28.dp,
+                                nickname = host3?.nickname ?: stringResource(R.string.room_default_top3),
+                                size = 26.dp,
                                 vipTier = 1
                             )
 
-                            Text("🌿", fontSize = 14.sp)
+                            Text("🌿", fontSize = 12.sp)
                         }
                     }
                 }
@@ -306,7 +396,7 @@ fun HomeScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 14.dp, vertical = 6.dp)
+                        .padding(horizontal = 16.dp, vertical = 6.dp)
                 ) {
                     val pagerState = rememberPagerState(pageCount = { 2 })
 
@@ -342,7 +432,10 @@ fun HomeScreen(
                                             )
                                         )
                                         .border(1.dp, StarGoldPrimary.copy(alpha = 0.5f), RoundedCornerShape(18.dp))
-                                        .clickable { onEventBannerClick() }
+                                        .clickable {
+                                            topNavTab = "Explore"
+                                            onEventBannerClick()
+                                        }
                                         .padding(14.dp)
                                 ) {
                                     Row(
@@ -358,7 +451,7 @@ fun HomeScreen(
                                                     .padding(horizontal = 6.dp, vertical = 2.dp)
                                             ) {
                                                 Text(
-                                                    text = "FEATURED GALA 🏆",
+                                                    text = stringResource(R.string.featured_gala_badge),
                                                     color = Color.Black,
                                                     fontWeight = FontWeight.Black,
                                                     fontSize = 9.sp
@@ -366,17 +459,22 @@ fun HomeScreen(
                                             }
                                             Spacer(modifier = Modifier.height(6.dp))
                                             Text(
-                                                text = "Star King Voice Superstars",
+                                                text = stringResource(R.string.featured_gala_title),
                                                 color = Color.White,
                                                 fontWeight = FontWeight.ExtraBold,
-                                                fontSize = 15.sp
+                                                fontSize = 15.sp,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
                                             )
                                             Text(
-                                                text = "Win exclusive 3D animated crowns & entrance gifts!",
+                                                text = stringResource(R.string.featured_gala_subtitle),
                                                 color = TextChampagne,
-                                                fontSize = 11.sp
+                                                fontSize = 11.sp,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
                                             )
                                         }
+                                        Spacer(modifier = Modifier.width(8.dp))
                                         Text("🌟 🚀", fontSize = 28.sp)
                                     }
                                 }
@@ -393,7 +491,7 @@ fun HomeScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 6.dp)
+                            .padding(horizontal = 16.dp, vertical = 6.dp)
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -402,7 +500,7 @@ fun HomeScreen(
                             Text("⭐", fontSize = 14.sp)
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "OFFICIAL VERIFIED DESK",
+                                text = stringResource(R.string.official_verified_desk),
                                 color = StarGoldPrimary,
                                 fontWeight = FontWeight.Black,
                                 fontSize = 11.sp,
@@ -456,14 +554,18 @@ fun HomeScreen(
                                 Spacer(modifier = Modifier.width(12.dp))
 
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
                                         Text(
                                             text = officialRoom.name,
                                             color = Color.White,
                                             fontWeight = FontWeight.Black,
                                             fontSize = 15.sp,
                                             maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.weight(1f, fill = false)
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
                                         Box(
@@ -473,7 +575,7 @@ fun HomeScreen(
                                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                                         ) {
                                             Text(
-                                                text = "OFFICIAL",
+                                                text = stringResource(R.string.official_badge_text),
                                                 color = Color.Black,
                                                 fontWeight = FontWeight.Black,
                                                 fontSize = 9.sp
@@ -484,7 +586,7 @@ fun HomeScreen(
                                     Spacer(modifier = Modifier.height(3.dp))
 
                                     Text(
-                                        text = officialRoom.description.ifBlank { "24/7 Verified Customer Support Desk • Real-time host & agency assistance" },
+                                        text = officialRoom.description.ifBlank { stringResource(R.string.official_support_default_desc) },
                                         color = TextChampagne,
                                         fontSize = 11.sp,
                                         maxLines = 1,
@@ -504,11 +606,16 @@ fun HomeScreen(
                                                 .border(1.dp, LiveGreen, RoundedCornerShape(6.dp))
                                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                                         ) {
-                                            Text("● LIVE AGENTS ACTIVE", color = LiveGreen, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                            Text(
+                                                text = stringResource(R.string.live_agents_active),
+                                                color = LiveGreen,
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
                                         }
 
                                         Text(
-                                            text = "👥 ${officialRoom.onlineCount} online",
+                                            text = stringResource(R.string.online_count_suffix, officialRoom.onlineCount),
                                             color = StarGoldLight,
                                             fontSize = 10.sp,
                                             fontWeight = FontWeight.SemiBold
@@ -518,7 +625,7 @@ fun HomeScreen(
 
                                 Icon(
                                     imageVector = Icons.Default.HeadsetMic,
-                                    contentDescription = "Support",
+                                    contentDescription = stringResource(R.string.official_badge_text),
                                     tint = StarGoldPrimary,
                                     modifier = Modifier.size(24.dp)
                                 )
@@ -530,7 +637,7 @@ fun HomeScreen(
 
             // --- 5. FEATURED ROOMS (Top-1 Large Card + Top 2 & 3 Stacked Cards) ---
             item {
-                Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 4.dp)) {
+                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
                     val room1 = filteredRooms.firstOrNull()
                     val room2 = filteredRooms.getOrNull(1)
                     val room3 = filteredRooms.getOrNull(2)
@@ -585,7 +692,7 @@ fun HomeScreen(
                                             .background(Color(0xFFD50000))
                                             .padding(horizontal = 6.dp, vertical = 1.dp)
                                     ) {
-                                        Text("68", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 10.sp)
+                                        Text("${room1.onlineCount}", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 10.sp)
                                     }
                                 }
 
@@ -596,9 +703,14 @@ fun HomeScreen(
                                         .fillMaxWidth(),
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
-                                    Text("🧘‍♂️ ✨", fontSize = 48.sp)
+                                    Text("🧘‍♂️ ✨", fontSize = 36.sp)
                                     Spacer(modifier = Modifier.height(4.dp))
-                                    Text("● LIVE VOICE", color = Color(0xFFFFD54F), fontSize = 9.sp, fontWeight = FontWeight.Black)
+                                    Text(
+                                        text = stringResource(R.string.live_voice_badge),
+                                        color = Color(0xFFFFD54F),
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Black
+                                    )
                                 }
 
                                 // Bottom Title Row
@@ -609,7 +721,7 @@ fun HomeScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = room1.name.ifBlank { "ॐ प्यारे बाबा💚 का आश्रम" },
+                                        text = room1.name.ifBlank { stringResource(R.string.room_default_top1) },
                                         color = Color.White,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 12.sp,
@@ -637,13 +749,13 @@ fun HomeScreen(
                                         .weight(1f)
                                         .clip(RoundedCornerShape(14.dp))
                                         .border(1.dp, Color(0xFF64B5F6).copy(alpha = 0.6f), RoundedCornerShape(14.dp))
-                                    .background(
-                                        Brush.verticalGradient(
-                                            listOf(Color(0xFF880E4F), Color(0xFFC2185B))
+                                        .background(
+                                            Brush.verticalGradient(
+                                                listOf(Color(0xFF880E4F), Color(0xFFC2185B))
+                                            )
                                         )
-                                    )
-                                    .clickable { onRoomClick(room2) }
-                                    .padding(6.dp)
+                                        .clickable { onRoomClick(room2) }
+                                        .padding(6.dp)
                                 ) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
@@ -658,7 +770,7 @@ fun HomeScreen(
                                             Text("2", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 9.sp)
                                         }
 
-                                        Text("62", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 9.sp)
+                                        Text("${room2.onlineCount}", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 9.sp)
                                     }
 
                                     Column(
@@ -669,7 +781,7 @@ fun HomeScreen(
                                     }
 
                                     Text(
-                                        text = room2.name.ifBlank { "ॐ बाबा प्यारे..." },
+                                        text = room2.name.ifBlank { stringResource(R.string.room_default_top2) },
                                         color = Color.White,
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
@@ -688,13 +800,13 @@ fun HomeScreen(
                                         .weight(1f)
                                         .clip(RoundedCornerShape(14.dp))
                                         .border(1.dp, Color(0xFFFFB74D).copy(alpha = 0.6f), RoundedCornerShape(14.dp))
-                                    .background(
-                                        Brush.verticalGradient(
-                                            listOf(Color(0xFF311B92), Color(0xFF4A148C))
+                                        .background(
+                                            Brush.verticalGradient(
+                                                listOf(Color(0xFF311B92), Color(0xFF4A148C))
+                                            )
                                         )
-                                    )
-                                    .clickable { onRoomClick(room3) }
-                                    .padding(6.dp)
+                                        .clickable { onRoomClick(room3) }
+                                        .padding(6.dp)
                                 ) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
@@ -709,7 +821,7 @@ fun HomeScreen(
                                             Text("3", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 9.sp)
                                         }
 
-                                        Text("49", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 9.sp)
+                                        Text("${room3.onlineCount}", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 9.sp)
                                     }
 
                                     Column(
@@ -720,7 +832,7 @@ fun HomeScreen(
                                     }
 
                                     Text(
-                                        text = room3.name.ifBlank { "💖 LADLA..." },
+                                        text = room3.name.ifBlank { stringResource(R.string.room_default_top3) },
                                         color = Color.White,
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
@@ -743,7 +855,7 @@ fun HomeScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 14.dp, vertical = 6.dp),
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     val chunked = gridRooms.chunked(3)
@@ -773,32 +885,46 @@ fun HomeScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     // CP Dating Card
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .height(64.dp)
+                            .heightIn(min = 68.dp)
                             .clip(RoundedCornerShape(16.dp))
                             .background(
                                 Brush.horizontalGradient(
                                     listOf(Color(0xFFE91E63), Color(0xFFFF80AB))
                                 )
                             )
-                            .clickable { }
+                            .clickable { onCpClick() }
                             .padding(horizontal = 12.dp, vertical = 8.dp)
                     ) {
                         Row(
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier.fillMaxWidth().align(Alignment.CenterStart),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Column {
-                                Text("CP Dating", color = Color.White, fontWeight = FontWeight.Black, fontSize = 13.sp)
-                                Text("8846 are online", color = Color.White.copy(alpha = 0.85f), fontSize = 10.sp)
+                            Column(modifier = Modifier.weight(1f, fill = false)) {
+                                Text(
+                                    text = stringResource(R.string.cp_dating_title),
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 13.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = stringResource(R.string.cp_dating_subtitle),
+                                    color = Color.White.copy(alpha = 0.85f),
+                                    fontSize = 10.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             }
+                            Spacer(modifier = Modifier.width(4.dp))
                             Text("💖 💓", fontSize = 20.sp)
                         }
                     }
@@ -807,25 +933,39 @@ fun HomeScreen(
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .height(64.dp)
+                            .heightIn(min = 68.dp)
                             .clip(RoundedCornerShape(16.dp))
                             .background(
                                 Brush.horizontalGradient(
                                     listOf(Color(0xFF673AB7), Color(0xFFB388FF))
                                 )
                             )
-                            .clickable { }
+                            .clickable { onPrivateCallClick() }
                             .padding(horizontal = 12.dp, vertical = 8.dp)
                     ) {
                         Row(
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier.fillMaxWidth().align(Alignment.CenterStart),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Column {
-                                Text("Private Call", color = Color.White, fontWeight = FontWeight.Black, fontSize = 13.sp)
-                                Text("Let's chat", color = Color.White.copy(alpha = 0.85f), fontSize = 10.sp)
+                            Column(modifier = Modifier.weight(1f, fill = false)) {
+                                Text(
+                                    text = stringResource(R.string.private_call_title),
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 13.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = stringResource(R.string.private_call_subtitle),
+                                    color = Color.White.copy(alpha = 0.85f),
+                                    fontSize = 10.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             }
+                            Spacer(modifier = Modifier.width(4.dp))
                             Text("📞 💬", fontSize = 20.sp)
                         }
                     }
@@ -857,7 +997,7 @@ private fun CompactGridRoomCard(
 
     Box(
         modifier = modifier
-            .height(115.dp)
+            .height(120.dp)
             .clip(RoundedCornerShape(14.dp))
             .border(1.dp, Color(0xFF332A55), RoundedCornerShape(14.dp))
             .background(Brush.verticalGradient(cardGradient))
@@ -937,7 +1077,7 @@ fun RoomCard(
                 if (room.coverPhotoUrl.isNotBlank()) {
                     AsyncImage(
                         model = room.coverPhotoUrl,
-                        contentDescription = "Room Cover",
+                        contentDescription = stringResource(R.string.room_cover_desc),
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .fillMaxSize()
@@ -975,7 +1115,8 @@ fun RoomCard(
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
                     )
                     if (room.isPrivate) {
                         Spacer(modifier = Modifier.width(4.dp))
@@ -984,9 +1125,11 @@ fun RoomCard(
                 }
                 Spacer(modifier = Modifier.height(3.dp))
                 Text(
-                    text = "Host: ${room.hostName} • ID: ${room.roomId}",
+                    text = stringResource(R.string.host_and_id_label, room.hostName, room.roomId),
                     color = TextMuted,
-                    fontSize = 11.sp
+                    fontSize = 11.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1004,10 +1147,20 @@ fun RoomCard(
                         )
                     }
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = "👥 ${room.onlineCount} online", color = TextChampagne, fontSize = 10.sp)
+                    Text(
+                        text = stringResource(R.string.online_count_badge, room.onlineCount),
+                        color = TextChampagne,
+                        fontSize = 10.sp,
+                        maxLines = 1
+                    )
                 }
             }
-            Icon(Icons.Default.Mic, contentDescription = "Live", tint = LiveGreen, modifier = Modifier.size(20.dp))
+            Icon(
+                Icons.Default.Mic,
+                contentDescription = stringResource(R.string.mic_live_desc),
+                tint = LiveGreen,
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }

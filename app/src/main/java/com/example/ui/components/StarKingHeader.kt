@@ -49,6 +49,7 @@ fun StarKingHeader(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
+                .weight(1f, fill = false)
                 .clickable { onAvatarClick() }
                 .testTag("header_user_profile")
         ) {
@@ -64,23 +65,27 @@ fun StarKingHeader(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            Column {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = user?.nickname ?: "Star User",
-                        color = TextWhite,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
-                    )
-                }
+            Column(modifier = Modifier.weight(1f, fill = false)) {
                 Text(
-                    text = "ID: ${user?.userId ?: "504094"}",
+                    text = user?.nickname ?: "Star User",
+                    color = TextWhite,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                )
+                Text(
+                    text = androidx.compose.ui.res.stringResource(com.example.R.string.user_id_label, (user?.userId ?: 504094L).toString()),
                     color = TextMuted,
                     fontSize = 11.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
             }
         }
+
+        Spacer(modifier = Modifier.width(8.dp))
 
         // Right side: Wallet Coin pill & Actions
         Row(
@@ -104,7 +109,8 @@ fun StarKingHeader(
                     text = String.format("%,d", coinBalance),
                     color = StarGoldPrimary,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp
+                    fontSize = 12.sp,
+                    maxLines = 1
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Box(
@@ -126,11 +132,11 @@ fun StarKingHeader(
             // Search Button
             IconButton(
                 onClick = onSearchClick,
-                modifier = Modifier.size(36.dp).testTag("header_search_btn")
+                modifier = Modifier.size(40.dp).testTag("header_search_btn")
             ) {
                 Icon(
                     imageVector = Icons.Default.Search,
-                    contentDescription = "Search Rooms & Users",
+                    contentDescription = androidx.compose.ui.res.stringResource(com.example.R.string.search_rooms_users_desc),
                     tint = TextWhite,
                     modifier = Modifier.size(20.dp)
                 )
@@ -140,11 +146,11 @@ fun StarKingHeader(
             Box(contentAlignment = Alignment.TopEnd) {
                 IconButton(
                     onClick = onNotificationClick,
-                    modifier = Modifier.size(36.dp).testTag("header_notifications_btn")
+                    modifier = Modifier.size(40.dp).testTag("header_notifications_btn")
                 ) {
                     Icon(
                         imageVector = Icons.Default.Notifications,
-                        contentDescription = "Notifications",
+                        contentDescription = androidx.compose.ui.res.stringResource(com.example.R.string.notifications_desc),
                         tint = TextWhite,
                         modifier = Modifier.size(20.dp)
                     )
@@ -152,7 +158,7 @@ fun StarKingHeader(
                 if (unreadNotifications > 0) {
                     Box(
                         modifier = Modifier
-                            .offset(x = (-4).dp, y = 4.dp)
+                            .offset(x = (-2).dp, y = 2.dp)
                             .size(14.dp)
                             .clip(CircleShape)
                             .background(DangerRed),
@@ -173,11 +179,11 @@ fun StarKingHeader(
             if (userRole.canAccessAdminPanel()) {
                 IconButton(
                     onClick = onAdminClick,
-                    modifier = Modifier.size(36.dp).testTag("header_admin_btn")
+                    modifier = Modifier.size(40.dp).testTag("header_admin_btn")
                 ) {
                     Icon(
                         imageVector = Icons.Default.AdminPanelSettings,
-                        contentDescription = "Admin Management Panel",
+                        contentDescription = androidx.compose.ui.res.stringResource(com.example.R.string.admin_management_panel),
                         tint = StarGoldPrimary,
                         modifier = Modifier.size(22.dp)
                     )

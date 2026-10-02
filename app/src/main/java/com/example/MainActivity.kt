@@ -239,8 +239,8 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                             NavigationBarItem(
                                 selected = currentTab == BottomNavTab.HOME,
                                 onClick = { viewModel.setTab(BottomNavTab.HOME) },
-                                icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-                                label = { Text("Home", fontSize = 11.sp, fontWeight = if (currentTab == BottomNavTab.HOME) FontWeight.Bold else FontWeight.Normal) },
+                                icon = { Icon(Icons.Default.Home, contentDescription = stringResource(R.string.nav_home)) },
+                                label = { Text(stringResource(R.string.nav_home), fontSize = 11.sp, fontWeight = if (currentTab == BottomNavTab.HOME) FontWeight.Bold else FontWeight.Normal) },
                                 colors = NavigationBarItemDefaults.colors(
                                     selectedIconColor = Color(0xFFFF2B6D),
                                     selectedTextColor = Color(0xFFFF2B6D),
@@ -255,8 +255,8 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                             NavigationBarItem(
                                 selected = currentTab == BottomNavTab.MOMENTS,
                                 onClick = { viewModel.setTab(BottomNavTab.MOMENTS) },
-                                icon = { Icon(Icons.Default.CameraAlt, contentDescription = "Moments") },
-                                label = { Text("Moments", fontSize = 11.sp, fontWeight = if (currentTab == BottomNavTab.MOMENTS) FontWeight.Bold else FontWeight.Normal) },
+                                icon = { Icon(Icons.Default.CameraAlt, contentDescription = stringResource(R.string.nav_moments)) },
+                                label = { Text(stringResource(R.string.nav_moments), fontSize = 11.sp, fontWeight = if (currentTab == BottomNavTab.MOMENTS) FontWeight.Bold else FontWeight.Normal) },
                                 colors = NavigationBarItemDefaults.colors(
                                     selectedIconColor = Color(0xFFFF2B6D),
                                     selectedTextColor = Color(0xFFFF2B6D),
@@ -299,7 +299,7 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                                         }
                                     }
                                 },
-                                label = { Text("Rooms", fontSize = 11.sp, fontWeight = if (currentTab == BottomNavTab.ROOMS) FontWeight.Bold else FontWeight.Normal) },
+                                label = { Text(stringResource(R.string.nav_rooms), fontSize = 11.sp, fontWeight = if (currentTab == BottomNavTab.ROOMS) FontWeight.Bold else FontWeight.Normal) },
                                 colors = NavigationBarItemDefaults.colors(
                                     selectedIconColor = Color(0xFFFF2B6D),
                                     selectedTextColor = Color(0xFFFF2B6D),
@@ -324,10 +324,10 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                                             }
                                         }
                                     ) {
-                                        Icon(Icons.Default.ChatBubble, contentDescription = "Messages")
+                                        Icon(Icons.Default.ChatBubble, contentDescription = stringResource(R.string.nav_messages))
                                     }
                                 },
-                                label = { Text("Messages", fontSize = 11.sp, fontWeight = if (currentTab == BottomNavTab.MESSAGES) FontWeight.Bold else FontWeight.Normal) },
+                                label = { Text(stringResource(R.string.nav_messages), fontSize = 11.sp, fontWeight = if (currentTab == BottomNavTab.MESSAGES) FontWeight.Bold else FontWeight.Normal) },
                                 colors = NavigationBarItemDefaults.colors(
                                     selectedIconColor = Color(0xFFFF2B6D),
                                     selectedTextColor = Color(0xFFFF2B6D),
@@ -342,8 +342,8 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                             NavigationBarItem(
                                 selected = currentTab == BottomNavTab.PROFILE,
                                 onClick = { viewModel.setTab(BottomNavTab.PROFILE) },
-                                icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
-                                label = { Text("Profile", fontSize = 11.sp, fontWeight = if (currentTab == BottomNavTab.PROFILE) FontWeight.Bold else FontWeight.Normal) },
+                                icon = { Icon(Icons.Default.Person, contentDescription = stringResource(R.string.nav_profile)) },
+                                label = { Text(stringResource(R.string.nav_profile), fontSize = 11.sp, fontWeight = if (currentTab == BottomNavTab.PROFILE) FontWeight.Bold else FontWeight.Normal) },
                                 colors = NavigationBarItemDefaults.colors(
                                     selectedIconColor = Color(0xFFFF2B6D),
                                     selectedTextColor = Color(0xFFFF2B6D),
@@ -368,7 +368,8 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                                     onRoomClick = { room -> viewModel.enterRoom(room.roomId) },
                                     onHostClick = { host -> viewModel.inspectUser(host) },
                                     onCreateRoomClick = { viewModel.openCreateRoom() },
-                                    onEventBannerClick = { viewModel.setTab(BottomNavTab.ROOMS) },
+                                    onEventBannerClick = { /* Tab switched inside HomeScreen or navigate to Explore */ },
+                                    events = allEvents,
                                     onStarVoiceBannerClick = { showStarVoicePromoModal = true }
                                 )
                             }

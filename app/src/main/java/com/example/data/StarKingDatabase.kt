@@ -57,6 +57,91 @@ abstract class StarKingDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_3_4 = object : androidx.room.migration.Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                val userColumns = listOf(
+                    "ALTER TABLE users ADD COLUMN isBanned INTEGER NOT NULL DEFAULT 0",
+                    "ALTER TABLE users ADD COLUMN banReason TEXT NOT NULL DEFAULT ''",
+                    "ALTER TABLE users ADD COLUMN isSuspended INTEGER NOT NULL DEFAULT 0",
+                    "ALTER TABLE users ADD COLUMN followersCount INTEGER NOT NULL DEFAULT 0",
+                    "ALTER TABLE users ADD COLUMN followingCount INTEGER NOT NULL DEFAULT 0",
+                    "ALTER TABLE users ADD COLUMN giftsReceivedCount INTEGER NOT NULL DEFAULT 0",
+                    "ALTER TABLE users ADD COLUMN createdAt INTEGER NOT NULL DEFAULT 0"
+                )
+                for (sql in userColumns) {
+                    try {
+                        db.execSQL(sql)
+                    } catch (_: Exception) {}
+                }
+
+                try {
+                    db.execSQL("ALTER TABLE rooms ADD COLUMN coverPhotoUrl TEXT NOT NULL DEFAULT ''")
+                } catch (_: Exception) {}
+
+                try {
+                    db.execSQL("""
+                        CREATE TABLE IF NOT EXISTS cp_connections (
+                            connectionId TEXT NOT NULL PRIMARY KEY,
+                            user1Id INTEGER NOT NULL,
+                            user1Name TEXT NOT NULL,
+                            user1Avatar TEXT NOT NULL,
+                            user2Id INTEGER NOT NULL,
+                            user2Name TEXT NOT NULL,
+                            user2Avatar TEXT NOT NULL,
+                            requesterId INTEGER NOT NULL,
+                            status TEXT NOT NULL,
+                            intimacyScore INTEGER NOT NULL,
+                            createdAt INTEGER NOT NULL,
+                            updatedAt INTEGER NOT NULL
+                        )
+                    """.trimIndent())
+                } catch (_: Exception) {}
+
+                try {
+                    db.execSQL("""
+                        CREATE TABLE IF NOT EXISTS private_call_sessions (
+                            callId TEXT NOT NULL PRIMARY KEY,
+                            callerId INTEGER NOT NULL,
+                            callerName TEXT NOT NULL,
+                            callerAvatar TEXT NOT NULL,
+                            receiverId INTEGER NOT NULL,
+                            receiverName TEXT NOT NULL,
+                            receiverAvatar TEXT NOT NULL,
+                            status TEXT NOT NULL,
+                            isVideo INTEGER NOT NULL,
+                            isCallerMuted INTEGER NOT NULL,
+                            isReceiverMuted INTEGER NOT NULL,
+                            isSpeakerOn INTEGER NOT NULL,
+                            isVideoEnabled INTEGER NOT NULL,
+                            startedAt INTEGER NOT NULL,
+                            connectedAt INTEGER NOT NULL,
+                            durationSeconds INTEGER NOT NULL,
+                            endedAt INTEGER NOT NULL,
+                            endReason TEXT NOT NULL,
+                            activeParticipantsCount INTEGER NOT NULL
+                        )
+                    """.trimIndent())
+                } catch (_: Exception) {}
+
+                try {
+                    db.execSQL("""
+                        CREATE TABLE IF NOT EXISTS private_call_history (
+                            historyId TEXT NOT NULL PRIMARY KEY,
+                            userId INTEGER NOT NULL,
+                            otherUserId INTEGER NOT NULL,
+                            otherUserName TEXT NOT NULL,
+                            otherUserAvatar TEXT NOT NULL,
+                            isOutgoing INTEGER NOT NULL,
+                            isVideo INTEGER NOT NULL,
+                            status TEXT NOT NULL,
+                            durationSeconds INTEGER NOT NULL,
+                            timestamp INTEGER NOT NULL
+                        )
+                    """.trimIndent())
+                } catch (_: Exception) {}
+            }
+        }
+
         val MIGRATION_1_2 = object : androidx.room.migration.Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 try {
@@ -98,7 +183,7 @@ abstract class StarKingDatabase : RoomDatabase() {
                     "star_king_voice_chat_v2.db"
                 )
                     .addCallback(StarKingDatabaseCallback(scope))
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                     .fallbackToDestructiveMigration(true)
                     .fallbackToDestructiveMigrationOnDowngrade()
                     .build()

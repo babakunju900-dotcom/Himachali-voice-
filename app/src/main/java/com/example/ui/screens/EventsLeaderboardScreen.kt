@@ -17,10 +17,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.model.EventEntity
 import com.example.model.UserEntity
 import com.example.ui.components.AvatarView
@@ -58,14 +61,16 @@ fun EventsLeaderboardScreen(
                     .clip(RoundedCornerShape(12.dp))
                     .background(if (selectedMainTab == 0) StarGoldPrimary else Color.Transparent)
                     .clickable { selectedMainTab = 0 }
-                    .padding(vertical = 8.dp),
+                    .padding(vertical = 10.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "🏆 Leaderboards",
+                    text = stringResource(R.string.tab_leaderboards),
                     color = if (selectedMainTab == 0) StarKingBgDark else TextWhite,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp
+                    fontSize = 13.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
             Box(
@@ -74,14 +79,16 @@ fun EventsLeaderboardScreen(
                     .clip(RoundedCornerShape(12.dp))
                     .background(if (selectedMainTab == 1) StarGoldPrimary else Color.Transparent)
                     .clickable { selectedMainTab = 1 }
-                    .padding(vertical = 8.dp),
+                    .padding(vertical = 10.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "🎪 Official Events",
+                    text = stringResource(R.string.tab_official_events),
                     color = if (selectedMainTab == 1) StarKingBgDark else TextWhite,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp
+                    fontSize = 13.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -94,18 +101,22 @@ fun EventsLeaderboardScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                listOf("Daily", "Weekly", "Monthly").forEach { timeframe ->
-                    val isSelected = selectedTimeFrame == timeframe
+                listOf(
+                    "Daily" to stringResource(R.string.timeframe_daily),
+                    "Weekly" to stringResource(R.string.timeframe_weekly),
+                    "Monthly" to stringResource(R.string.timeframe_monthly)
+                ).forEach { (timeframeKey, localizedTimeframe) ->
+                    val isSelected = selectedTimeFrame == timeframeKey
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(14.dp))
                             .background(if (isSelected) StarKingCardDark else StarKingSurfaceVariantDark)
                             .border(1.dp, if (isSelected) StarGoldPrimary else Color.Transparent, RoundedCornerShape(14.dp))
-                            .clickable { selectedTimeFrame = timeframe }
-                            .padding(horizontal = 16.dp, vertical = 6.dp)
+                            .clickable { selectedTimeFrame = timeframeKey }
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
                     ) {
                         Text(
-                            text = timeframe,
+                            text = localizedTimeframe,
                             color = if (isSelected) StarGoldPrimary else TextMuted,
                             fontWeight = FontWeight.Bold,
                             fontSize = 12.sp
@@ -162,11 +173,15 @@ private fun PodiumSection(
     top3: List<UserEntity>,
     onUserClick: (UserEntity) -> Unit
 ) {
+    val goldScore = stringResource(R.string.rank_gold_score)
+    val silverScore = stringResource(R.string.rank_silver_score)
+    val bronzeScore = stringResource(R.string.rank_bronze_score)
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.Bottom
     ) {
         // Rank 2 (Silver)
@@ -176,10 +191,13 @@ private fun PodiumSection(
                 rank = 2,
                 crownEmoji = "🥈",
                 badgeColor = Color(0xFFC0C0C0),
-                score = "142,500 🪙",
+                score = silverScore,
                 height = 100.dp,
-                onClick = { onUserClick(top3[1]) }
+                onClick = { onUserClick(top3[1]) },
+                modifier = Modifier.weight(1f)
             )
+        } else {
+            Spacer(modifier = Modifier.weight(1f))
         }
 
         // Rank 1 (Gold)
@@ -189,9 +207,10 @@ private fun PodiumSection(
                 rank = 1,
                 crownEmoji = "👑",
                 badgeColor = StarGoldPrimary,
-                score = "284,500 🪙",
+                score = goldScore,
                 height = 125.dp,
-                onClick = { onUserClick(top3[0]) }
+                onClick = { onUserClick(top3[0]) },
+                modifier = Modifier.weight(1f)
             )
         }
 
@@ -202,10 +221,13 @@ private fun PodiumSection(
                 rank = 3,
                 crownEmoji = "🥉",
                 badgeColor = Color(0xFFCD7F32),
-                score = "98,200 🪙",
+                score = bronzeScore,
                 height = 85.dp,
-                onClick = { onUserClick(top3[2]) }
+                onClick = { onUserClick(top3[2]) },
+                modifier = Modifier.weight(1f)
             )
+        } else {
+            Spacer(modifier = Modifier.weight(1f))
         }
     }
 }
@@ -218,11 +240,13 @@ private fun PodiumItem(
     badgeColor: Color,
     score: String,
     height: androidx.compose.ui.unit.Dp,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
             .clickable { onClick() }
             .testTag("podium_rank_$rank")
     ) {
@@ -231,7 +255,7 @@ private fun PodiumItem(
         AvatarView(
             avatarUrl = user.avatarUrl,
             nickname = user.nickname,
-            size = if (rank == 1) 58.dp else 48.dp,
+            size = if (rank == 1) 56.dp else 46.dp,
             frameName = user.equippedFrame,
             vipTier = user.vipTier,
             level = user.level,
@@ -247,14 +271,17 @@ private fun PodiumItem(
             fontSize = 12.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.widthIn(max = 80.dp)
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 2.dp)
         )
 
         Text(
             text = score,
             color = StarGoldLight,
             fontSize = 10.sp,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
 
         Spacer(modifier = Modifier.height(6.dp))
@@ -262,7 +289,7 @@ private fun PodiumItem(
         // Podium Block
         Box(
             modifier = Modifier
-                .width(82.dp)
+                .fillMaxWidth()
                 .height(height)
                 .clip(RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp))
                 .background(
@@ -323,20 +350,27 @@ private fun RankRowItem(
                 text = user.nickname,
                 color = TextWhite,
                 fontWeight = FontWeight.Bold,
-                fontSize = 13.sp
+                fontSize = 13.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = "ID: ${user.userId}",
+                text = stringResource(R.string.user_id_num, user.userId),
                 color = TextSecondary,
-                fontSize = 11.sp
+                fontSize = 11.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
 
+        Spacer(modifier = Modifier.width(8.dp))
+
         Text(
-            text = "${user.giftsReceivedCount * 250} 🪙",
+            text = stringResource(R.string.rank_score_format, user.giftsReceivedCount * 250),
             color = StarGoldPrimary,
             fontWeight = FontWeight.Bold,
-            fontSize = 13.sp
+            fontSize = 13.sp,
+            maxLines = 1
         )
     }
 }
@@ -365,28 +399,39 @@ private fun EventCard(event: EventEntity) {
                         text = event.category,
                         color = StarKingBgDark,
                         fontWeight = FontWeight.Black,
-                        fontSize = 10.sp
+                        fontSize = 10.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
+                Spacer(modifier = Modifier.width(8.dp))
+
                 Text(
-                    text = "Status: ACTIVE 🟢",
+                    text = stringResource(R.string.status_active),
                     color = LiveGreen,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 11.sp
+                    fontSize = 11.sp,
+                    maxLines = 1
                 )
             }
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(text = event.bannerEmoji, fontSize = 28.sp)
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = event.title,
                     color = TextWhite,
                     fontWeight = FontWeight.ExtraBold,
-                    fontSize = 15.sp
+                    fontSize = 15.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
                 )
             }
 
@@ -396,7 +441,9 @@ private fun EventCard(event: EventEntity) {
                 text = event.description,
                 color = TextChampagne,
                 fontSize = 12.sp,
-                lineHeight = 16.sp
+                lineHeight = 16.sp,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -409,8 +456,20 @@ private fun EventCard(event: EventEntity) {
                     .padding(10.dp)
             ) {
                 Column {
-                    Text(text = "🎁 Prize Details:", color = StarGoldPrimary, fontWeight = FontWeight.Bold, fontSize = 11.sp)
-                    Text(text = event.prizeDescription, color = TextWhite, fontSize = 11.sp)
+                    Text(
+                        text = stringResource(R.string.prize_details_heading),
+                        color = StarGoldPrimary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 11.sp
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = event.prizeDescription,
+                        color = TextWhite,
+                        fontSize = 11.sp,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
         }
