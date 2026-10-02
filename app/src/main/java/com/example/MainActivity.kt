@@ -103,6 +103,9 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
     val allSupportTickets by viewModel.allSupportTickets.collectAsStateWithLifecycle()
     val allReports by viewModel.allReports.collectAsStateWithLifecycle()
     val platformStats by viewModel.platformStats.collectAsStateWithLifecycle()
+    val allRoomsAdmin by viewModel.allAdminRooms.collectAsStateWithLifecycle()
+    val allUsersAdmin by viewModel.allUsersAdmin.collectAsStateWithLifecycle()
+    val allEventsAdmin by viewModel.allAdminEvents.collectAsStateWithLifecycle()
 
     val showCreateRoomModal by viewModel.showCreateRoomModal.collectAsStateWithLifecycle()
     val showRechargeModal by viewModel.showRechargeModal.collectAsStateWithLifecycle()
@@ -556,13 +559,27 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
         if (showAdminDashboard) {
             AdminDashboardDialog(
                 stats = platformStats,
-                users = topHosts,
+                users = allUsersAdmin,
+                rooms = allRoomsAdmin,
+                events = allEventsAdmin,
                 reports = allReports,
                 tickets = allSupportTickets,
+                currentUserRole = currentUser?.role ?: "SUPER_ADMIN",
                 onDismiss = { viewModel.closeAdminDashboard() },
                 onBanUser = { targetId, reason -> viewModel.adminBanUser(targetId, reason) },
                 onUnbanUser = { targetId -> viewModel.adminUnbanUser(targetId) },
+                onSuspendUser = { targetId, suspend -> viewModel.adminSuspendUser(targetId, suspend) },
                 onVerifyUser = { targetId, verified -> viewModel.adminVerifyUser(targetId, verified) },
+                onRemoveUserPhoto = { targetId -> viewModel.adminRemoveUserAvatar(targetId) },
+                onSendWarning = { targetId, msg -> viewModel.adminSendUserWarning(targetId, msg) },
+                onCreateRoom = { name, desc, cat, isPriv, pwd, cov ->
+                    viewModel.adminCreateRoom(name, desc, cat, isPriv, pwd, cov)
+                },
+                onDeleteRoom = { roomId -> viewModel.adminDeleteRoom(roomId) },
+                onCreateEvent = { title, desc, cat, emoji, url, rules, prize, pts, feat ->
+                    viewModel.adminCreateEvent(title, desc, cat, emoji, url, rules, prize, pts, feat)
+                },
+                onDeleteEvent = { eventId -> viewModel.adminDeleteEvent(eventId) },
                 onReplyTicket = { ticketId, reply, status -> viewModel.adminReplyTicket(ticketId, reply, status) },
                 onReviewReport = { reportId, status, notes -> viewModel.adminReviewReport(reportId, status, notes) }
             )

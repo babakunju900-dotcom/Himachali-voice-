@@ -23,6 +23,9 @@ interface StarKingDao {
     @Query("SELECT * FROM users WHERE isOfficialVerified = 1")
     fun getOfficialUsers(): Flow<List<UserEntity>>
 
+    @Query("SELECT * FROM users ORDER BY userId ASC")
+    fun getAllUsersAdmin(): Flow<List<UserEntity>>
+
     @Query("SELECT * FROM users WHERE role = 'HOST' OR level >= 5 ORDER BY giftsReceivedCount DESC LIMIT :limit")
     fun getTopHosts(limit: Int = 10): Flow<List<UserEntity>>
 
@@ -287,4 +290,86 @@ interface StarKingDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAppSetting(setting: AppSettingEntity)
+
+    // --- CP Connections ---
+    @Query("SELECT * FROM cp_connections ORDER BY updatedAt DESC")
+    fun getAllCpConnections(): Flow<List<CpConnectionEntity>>
+
+    @Query("SELECT * FROM cp_connections WHERE user1Id = :userId OR user2Id = :userId ORDER BY updatedAt DESC")
+    fun getCpConnectionsForUser(userId: Long): Flow<List<CpConnectionEntity>>
+
+    @Query("SELECT * FROM cp_connections WHERE (user1Id = :u1 AND user2Id = :u2) OR (user1Id = :u2 AND user2Id = :u1) LIMIT 1")
+    fun getCpConnection(u1: Long, u2: Long): Flow<CpConnectionEntity?>
+
+    @Query("SELECT * FROM cp_connections WHERE (user1Id = :u1 AND user2Id = :u2) OR (user1Id = :u2 AND user2Id = :u1) LIMIT 1")
+    suspend fun getCpConnectionSync(u1: Long, u2: Long): CpConnectionEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertCpConnection(cp: CpConnectionEntity)
+
+    @Update
+    suspend fun updateCpConnection(cp: CpConnectionEntity)
+
+    @Query("DELETE FROM cp_connections WHERE connectionId = :connectionId")
+    suspend fun deleteCpConnection(connectionId: String)
+
+    @Query("SELECT COUNT(*) FROM cp_connections WHERE status = 'ACCEPTED'")
+    fun getActiveCpConnectionsCount(): Flow<Int>
+
+    // --- Private Call Sessions (2 Persons Only) ---
+    @Query("SELECT * FROM private_call_sessions WHERE (callerId = :userId OR receiverId = :userId) AND status IN ('CALLING', 'RINGING', 'CONNECTING', 'CONNECTED') LIMIT 1")
+    fun getActiveCallSessionForUser(userId: Long): Flow<PrivateCallSessionEntity?>
+
+    @Query("SELECT * FROM private_call_sessions WHERE (callerId = :userId OR receiverId = :userId) AND status IN ('CALLING', 'RINGING', 'CONNECTING', 'CONNECTED') LIMIT 1")
+    suspend fun getActiveCallSessionForUserSync(userId: Long): PrivateCallSessionEntity?
+
+    @Query("SELECT * FROM private_call_sessions WHERE callId = :callId LIMIT 1")
+    fun getCallSessionById(callId: String): Flow<PrivateCallSessionEntity?>
+
+    @Query("SELECT * FROM private_call_sessions WHERE callId = :callId LIMIT 1")
+    suspend fun getCallSessionByIdSync(callId: String): PrivateCallSessionEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertCallSession(session: PrivateCallSessionEntity)
+
+    @Update
+    suspend fun updateCallSession(session: PrivateCallSessionEntity)
+
+    @Query("DELETE FROM private_call_sessions WHERE callId = :callId")
+    suspend fun deleteCallSession(callId: String)
+
+    @Query("SELECT COUNT(*) FROM private_call_sessions WHERE status = 'CONNECTED'")
+    fun getActiveCallSessionsCount(): Flow<Int>
+
+    // --- Private Call History ---
+    @Query("SELECT * FROM private_call_history WHERE userId = :userId ORDER BY timestamp DESC")
+    fun getCallHistoryForUser(userId: Long): Flow<List<PrivateCallHistoryEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertCallHistory(history: PrivateCallHistoryEntity)
+
+    @Query("DELETE FROM private_call_history WHERE userId = :userId")
+    suspend fun clearCallHistoryForUser(userId: Long)
+
+    // --- Additional Admin & Event Management ---
+    @Query("SELECT * FROM events ORDER BY isFeatured DESC, endDate ASC")
+    fun getAllEventsAdmin(): Flow<List<EventEntity>>
+
+    @Query("SELECT * FROM events WHERE id = :id LIMIT 1")
+    suspend fun getEventByIdSync(id: String): EventEntity?
+
+    @Update
+    suspend fun updateEvent(event: EventEntity)
+
+    @Query("DELETE FROM events WHERE id = :id")
+    suspend fun deleteEvent(id: String)
+
+    @Query("SELECT * FROM rooms ORDER BY isLive DESC, onlineCount DESC")
+    fun getAllRoomsAdmin(): Flow<List<RoomEntity>>
+
+    @Query("SELECT COUNT(*) FROM users WHERE isBanned = 1")
+    fun getBannedUsersCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM users")
+    fun getTotalUsersCountFlow(): Flow<Int>
 }

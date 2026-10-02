@@ -33,9 +33,12 @@ import kotlinx.coroutines.launch
         ReportEntity::class,
         ModerationActionEntity::class,
         NotificationEntity::class,
-        AppSettingEntity::class
+        AppSettingEntity::class,
+        CpConnectionEntity::class,
+        PrivateCallSessionEntity::class,
+        PrivateCallHistoryEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class StarKingDatabase : RoomDatabase() {

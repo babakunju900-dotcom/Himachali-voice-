@@ -120,6 +120,9 @@ class StarKingViewModel(application: Application) : AndroidViewModel(application
     val allAgencies: StateFlow<List<AgencyEntity>> = repository.getAllAgencies()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val allUsersAdmin: StateFlow<List<UserEntity>> = repository.getAllUsersAdmin()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     // Search and Category Filter
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
@@ -438,6 +441,256 @@ class StarKingViewModel(application: Application) : AndroidViewModel(application
 
     private val _toastMessage = MutableStateFlow<String?>(null)
     val toastMessage: StateFlow<String?> = _toastMessage.asStateFlow()
+
+    // --- CP Connections ---
+    val cpConnections: StateFlow<List<CpConnectionEntity>> = _currentUserId
+        .flatMapLatest { uid -> repository.getCpConnectionsForUser(uid) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private val _showCpScreen = MutableStateFlow(false)
+    val showCpScreen: StateFlow<Boolean> = _showCpScreen.asStateFlow()
+
+    fun openCpScreen() { _showCpScreen.value = true }
+    fun closeCpScreen() { _showCpScreen.value = false }
+
+    fun sendCpRequest(target: UserEntity) {
+        val user = currentUser.value ?: return
+        viewModelScope.launch {
+            val res = repository.sendCpRequest(user, target)
+            if (res.isSuccess) {
+                showToast("CP connection request sent to ${target.nickname} 💞")
+            } else {
+                showToast(res.exceptionOrNull()?.message ?: "Could not send CP request")
+            }
+        }
+    }
+
+    fun acceptCpRequest(connectionId: String) {
+        val user = currentUser.value ?: return
+        viewModelScope.launch {
+            val res = repository.acceptCpRequest(connectionId, user.userId)
+            if (res.isSuccess) {
+                showToast("CP Connection accepted! 💖")
+            }
+        }
+    }
+
+    fun declineCpRequest(connectionId: String) {
+        val user = currentUser.value ?: return
+        viewModelScope.launch {
+            repository.declineCpRequest(connectionId, user.userId)
+            showToast("CP Connection request declined")
+        }
+    }
+
+    fun endCpConnection(connectionId: String) {
+        viewModelScope.launch {
+            repository.endCpConnection(connectionId)
+            showToast("CP Connection ended")
+        }
+    }
+
+    fun blockCpConnection(connectionId: String) {
+        viewModelScope.launch {
+            repository.blockCpConnection(connectionId)
+            showToast("User blocked from CP requests")
+        }
+    }
+
+    // --- Private Call System (Strictly 2 Persons Only) ---
+    val activePrivateCall: StateFlow<PrivateCallSessionEntity?> = _currentUserId
+        .flatMapLatest { uid -> repository.getActiveCallSessionForUser(uid) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val callHistory: StateFlow<List<PrivateCallHistoryEntity>> = _currentUserId
+        .flatMapLatest { uid -> repository.getCallHistoryForUser(uid) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private val _showPrivateCallHistory = MutableStateFlow(false)
+    val showPrivateCallHistory: StateFlow<Boolean> = _showPrivateCallHistory.asStateFlow()
+
+    fun openPrivateCallHistory() { _showPrivateCallHistory.value = true }
+    fun closePrivateCallHistory() { _showPrivateCallHistory.value = false }
+
+    fun startPrivateCall(targetUser: UserEntity, isVideo: Boolean = false) {
+        val user = currentUser.value ?: return
+        if (user.userId == targetUser.userId) {
+            showToast("Cannot call yourself!")
+            return
+        }
+        viewModelScope.launch {
+            val res = repository.startPrivateCall(user, targetUser, isVideo)
+            if (res.isSuccess) {
+                showToast("Calling ${targetUser.nickname}...")
+            } else {
+                showToast(res.exceptionOrNull()?.message ?: "Call failed")
+            }
+        }
+    }
+
+    fun acceptPrivateCall() {
+        val call = activePrivateCall.value ?: return
+        viewModelScope.launch {
+            repository.acceptPrivateCall(call.callId)
+        }
+    }
+
+    fun declinePrivateCall() {
+        val call = activePrivateCall.value ?: return
+        val user = currentUser.value ?: return
+        viewModelScope.launch {
+            repository.declinePrivateCall(call.callId, user.userId)
+            showToast("Call declined")
+        }
+    }
+
+    fun endPrivateCall() {
+        val call = activePrivateCall.value ?: return
+        val user = currentUser.value ?: return
+        viewModelScope.launch {
+            repository.endPrivateCall(call.callId, user.userId)
+            showToast("Call ended")
+        }
+    }
+
+    fun clearPrivateCallHistory() {
+        val user = currentUser.value ?: return
+        viewModelScope.launch {
+            repository.clearCallHistory(user.userId)
+            showToast("Call history cleared")
+        }
+    }
+
+    // --- Admin Control Features ---
+    val allAdminRooms: StateFlow<List<RoomEntity>> = repository.getAllRoomsAdmin()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val allAdminEvents: StateFlow<List<EventEntity>> = repository.getAllEventsAdmin()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun adminCreateRoom(
+        name: String,
+        description: String,
+        category: String,
+        isPrivate: Boolean,
+        password: String,
+        coverPhotoUrl: String
+    ) {
+        val user = currentUser.value ?: return
+        viewModelScope.launch {
+            val room = repository.adminCreateRoom(
+                name = name,
+                description = description,
+                category = category,
+                isPrivate = isPrivate,
+                password = password,
+                coverPhotoUrl = coverPhotoUrl,
+                ownerId = user.userId,
+                ownerName = user.nickname,
+                ownerAvatar = user.avatarUrl
+            )
+            showToast("Admin room '${room.name}' created and published live!")
+            refreshStats()
+        }
+    }
+
+    fun adminDeleteRoom(roomId: Long) {
+        viewModelScope.launch {
+            repository.adminDeleteRoom(roomId)
+            showToast("Room $roomId deleted by admin")
+            refreshStats()
+        }
+    }
+
+    fun adminCreateEvent(
+        title: String,
+        description: String,
+        category: String,
+        bannerEmoji: String,
+        bannerUrl: String,
+        rules: String,
+        prizeDescription: String,
+        targetPoints: Long,
+        isFeatured: Boolean
+    ) {
+        viewModelScope.launch {
+            val evt = repository.adminCreateEvent(
+                title = title,
+                description = description,
+                category = category,
+                bannerEmoji = bannerEmoji,
+                bannerUrl = bannerUrl,
+                rules = rules,
+                prizeDescription = prizeDescription,
+                targetPoints = targetPoints,
+                isFeatured = isFeatured
+            )
+            showToast("Event '${evt.title}' published live in app!")
+            refreshStats()
+        }
+    }
+
+    fun adminUpdateEvent(event: EventEntity) {
+        viewModelScope.launch {
+            repository.adminUpdateEvent(event)
+            showToast("Event updated successfully")
+            refreshStats()
+        }
+    }
+
+    fun adminDeleteEvent(eventId: String) {
+        viewModelScope.launch {
+            repository.adminDeleteEvent(eventId)
+            showToast("Event deleted")
+            refreshStats()
+        }
+    }
+
+    fun adminSuspendUser(userId: Long, suspend: Boolean) {
+        viewModelScope.launch {
+            repository.adminSuspendUser(userId, suspend)
+            showToast(if (suspend) "User $userId suspended" else "User $userId unsuspended")
+            refreshStats()
+        }
+    }
+
+    fun adminBanUserAccount(userId: Long, reason: String) {
+        viewModelScope.launch {
+            repository.adminBanUser(userId, reason)
+            showToast("User $userId banned: $reason")
+            refreshStats()
+        }
+    }
+
+    fun adminUnbanUserAccount(userId: Long) {
+        viewModelScope.launch {
+            repository.adminUnbanUser(userId)
+            showToast("User $userId unbanned")
+            refreshStats()
+        }
+    }
+
+    fun adminVerifyUserAccount(userId: Long, isVerified: Boolean) {
+        viewModelScope.launch {
+            repository.adminVerifyUser(userId, isVerified)
+            showToast(if (isVerified) "User $userId verified ✓" else "Verification removed")
+            refreshStats()
+        }
+    }
+
+    fun adminRemoveUserAvatar(userId: Long) {
+        viewModelScope.launch {
+            repository.adminRemoveUserPhoto(userId)
+            showToast("Profile photo removed for User $userId")
+        }
+    }
+
+    fun adminSendUserWarning(userId: Long, message: String) {
+        viewModelScope.launch {
+            repository.adminSendWarning(userId, message)
+            showToast("Warning notification sent to User $userId")
+        }
+    }
 
     // Platform Statistics (for Admin)
     private val _platformStats = MutableStateFlow<PlatformStats?>(null)

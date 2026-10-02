@@ -45,6 +45,8 @@ fun HomeScreen(
     onCreateRoomClick: () -> Unit,
     onEventBannerClick: () -> Unit,
     onStarVoiceBannerClick: () -> Unit = {},
+    onCpClick: () -> Unit = {},
+    onPrivateCallClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var topNavTab by remember { mutableStateOf("Room") } // "People", "Room", "Game", "Explore"

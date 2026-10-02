@@ -15,7 +15,13 @@ data class EventEntity(
     val prizeDescription: String,
     val targetPoints: Long,
     val category: String, // DAILY, WEEKLY, MONTHLY, SPECIAL
-    val isActive: Boolean = true
+    val isActive: Boolean = true,
+    val bannerUrl: String = "",
+    val isPublished: Boolean = true,
+    val isFeatured: Boolean = false,
+    val startTimeText: String = "18:00 UTC",
+    val endTimeText: String = "23:00 UTC",
+    val rewardInfo: String = "5,000 Coins + 3D Golden Crown"
 )
 
 @Entity(tableName = "agencies")
