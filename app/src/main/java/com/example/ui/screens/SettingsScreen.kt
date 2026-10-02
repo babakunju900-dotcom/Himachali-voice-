@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -31,9 +32,16 @@ fun SettingsScreen(
     deviceInfo: String = "",
     modifier: Modifier = Modifier
 ) {
-    val languages = listOf("English", "Hindi", "Bengali", "Nepali", "Urdu", "Indonesian", "Arabic")
     var micSensitivity by remember { mutableFloatStateOf(0.7f) }
     var soundEffects by remember { mutableStateOf(true) }
+
+    var isPrivateProfile by remember { mutableStateOf(false) }
+    var hideAge by remember { mutableStateOf(false) }
+    var hideCountry by remember { mutableStateOf(false) }
+    var allowMessages by remember { mutableStateOf(true) }
+    var allowProfileSharing by remember { mutableStateOf(true) }
+    var defaultRoomPrivacy by remember { mutableStateOf("Public") }
+    val languages = listOf("English", "Hindi", "Bengali", "Nepali", "Urdu", "Indonesian", "Arabic")
 
     var showLogoutConfirmDialog by remember { mutableStateOf(false) }
     var showDeleteAccountConfirmDialog by remember { mutableStateOf(false) }
@@ -243,6 +251,123 @@ fun SettingsScreen(
                                 onValueChange = { micSensitivity = it },
                                 colors = SliderDefaults.colors(thumbColor = StarGoldPrimary, activeTrackColor = StarGoldPrimary)
                             )
+                        }
+                    }
+                }
+
+                // Profile & Room Privacy Controls (Requirement 11)
+                item {
+                    Text(text = "Profile & Room Privacy 🔒", color = StarGoldPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = StarKingSurfaceVariantDark),
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(text = "Public Profile", color = TextWhite, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                                    Text(text = "Allow others to discover and view your profile", color = TextMuted, fontSize = 10.sp)
+                                }
+                                Switch(
+                                    checked = !isPrivateProfile,
+                                    onCheckedChange = { isPrivateProfile = !it },
+                                    colors = SwitchDefaults.colors(checkedThumbColor = StarGoldPrimary)
+                                )
+                            }
+
+                            HorizontalDivider(color = StarKingCardBorder.copy(alpha = 0.5f))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(text = "Hide Age", color = TextWhite, fontSize = 13.sp)
+                                Switch(
+                                    checked = hideAge,
+                                    onCheckedChange = { hideAge = it },
+                                    colors = SwitchDefaults.colors(checkedThumbColor = StarGoldPrimary)
+                                )
+                            }
+
+                            HorizontalDivider(color = StarKingCardBorder.copy(alpha = 0.5f))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(text = "Hide Country & Flag", color = TextWhite, fontSize = 13.sp)
+                                Switch(
+                                    checked = hideCountry,
+                                    onCheckedChange = { hideCountry = it },
+                                    colors = SwitchDefaults.colors(checkedThumbColor = StarGoldPrimary)
+                                )
+                            }
+
+                            HorizontalDivider(color = StarKingCardBorder.copy(alpha = 0.5f))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(text = "Allow Private Messages", color = TextWhite, fontSize = 13.sp)
+                                    Text(text = "Receive direct messages from community members", color = TextMuted, fontSize = 10.sp)
+                                }
+                                Switch(
+                                    checked = allowMessages,
+                                    onCheckedChange = { allowMessages = it },
+                                    colors = SwitchDefaults.colors(checkedThumbColor = StarGoldPrimary)
+                                )
+                            }
+
+                            HorizontalDivider(color = StarKingCardBorder.copy(alpha = 0.5f))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(text = "Allow Profile Sharing", color = TextWhite, fontSize = 13.sp)
+                                Switch(
+                                    checked = allowProfileSharing,
+                                    onCheckedChange = { allowProfileSharing = it },
+                                    colors = SwitchDefaults.colors(checkedThumbColor = StarGoldPrimary)
+                                )
+                            }
+
+                            HorizontalDivider(color = StarKingCardBorder.copy(alpha = 0.5f))
+
+                            Column {
+                                Text(text = "Default Room Privacy", color = TextWhite, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    listOf("Public", "Private", "Password", "Approved Only").forEach { opt ->
+                                        val isSel = opt == defaultRoomPrivacy
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(if (isSel) StarGoldPrimary else Color(0xFF231B45))
+                                                .clickable { defaultRoomPrivacy = opt }
+                                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                        ) {
+                                            Text(
+                                                text = opt,
+                                                color = if (isSel) StarKingBgDark else TextWhite,
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }

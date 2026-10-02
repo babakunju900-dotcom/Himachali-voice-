@@ -33,10 +33,12 @@ import com.example.ui.theme.*
 fun MomentScreen(
     moments: List<MomentEntity>,
     topics: List<MomentTopic>,
+    currentUserId: Long = 504094L,
     onLikeMoment: (String) -> Unit,
     onFollowUser: (Long) -> Unit,
     onPostComment: (String, String) -> Unit,
-    onCreateMoment: (String, String) -> Unit,
+    onCreateMoment: (String, String, String) -> Unit,
+    onDeleteMoment: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var selectedTab by remember { mutableStateOf("Recommend") } // "Follow" or "Recommend"
@@ -261,9 +263,11 @@ fun MomentScreen(
                 items(filteredMoments, key = { it.id }) { moment ->
                     MomentPostCard(
                         moment = moment,
+                        isMyMoment = moment.userId == currentUserId,
                         onLike = { onLikeMoment(moment.id) },
                         onFollow = { onFollowUser(moment.userId) },
-                        onComment = { commentingMomentId = moment.id }
+                        onComment = { commentingMomentId = moment.id },
+                        onDelete = { onDeleteMoment(moment.id) }
                     )
                 }
             }
@@ -275,8 +279,8 @@ fun MomentScreen(
         CreateMomentDialog(
             topics = topics,
             onDismiss = { showCreateDialog = false },
-            onSubmit = { caption, topic ->
-                onCreateMoment(caption, topic)
+            onSubmit = { caption, topic, imageUri ->
+                onCreateMoment(caption, topic, imageUri)
                 showCreateDialog = false
             }
         )
@@ -421,9 +425,11 @@ private fun TopicCard(
 @Composable
 private fun MomentPostCard(
     moment: MomentEntity,
+    isMyMoment: Boolean = false,
     onLike: () -> Unit,
     onFollow: () -> Unit,
-    onComment: () -> Unit
+    onComment: () -> Unit,
+    onDelete: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -518,22 +524,39 @@ private fun MomentPostCard(
                 )
             }
 
-            // Follow / Following Button
-            Button(
-                onClick = onFollow,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (moment.isFollowing) Color(0xFF262142) else Color(0xFFFF2B6D),
-                    contentColor = Color.White
-                ),
-                shape = RoundedCornerShape(16.dp),
-                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 4.dp),
-                modifier = Modifier.height(30.dp)
-            ) {
-                Text(
-                    text = if (moment.isFollowing) "Following" else "+ Follow",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold
-                )
+            // Follow / Delete Button
+            if (isMyMoment) {
+                IconButton(
+                    onClick = onDelete,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF2B1D35))
+                ) {
+                    Icon(
+                        Icons.Default.DeleteOutline,
+                        contentDescription = "Delete Moment",
+                        tint = DangerRed,
+                        modifier = Modifier.size(17.dp)
+                    )
+                }
+            } else {
+                Button(
+                    onClick = onFollow,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (moment.isFollowing) Color(0xFF262142) else Color(0xFFFF2B6D),
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(16.dp),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 4.dp),
+                    modifier = Modifier.height(30.dp)
+                ) {
+                    Text(
+                        text = if (moment.isFollowing) "Following" else "+ Follow",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
 
@@ -731,10 +754,27 @@ private fun MomentPostCard(
 private fun CreateMomentDialog(
     topics: List<MomentTopic>,
     onDismiss: () -> Unit,
-    onSubmit: (String, String) -> Unit
+    onSubmit: (String, String, String) -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     var caption by remember { mutableStateOf("") }
     var selectedTopic by remember { mutableStateOf(topics.firstOrNull()?.hashtag ?: "# Mood________") }
+    var attachedImageUri by remember { mutableStateOf("") }
+
+    val photoPickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null) attachedImageUri = uri.toString()
+    }
+
+    val cameraLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.TakePicturePreview()
+    ) { bitmap ->
+        if (bitmap != null) {
+            val uri = com.example.util.CountryHelper.saveAndCompressBitmap(context, bitmap)
+            attachedImageUri = uri.toString()
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -760,7 +800,7 @@ private fun CreateMomentDialog(
                     placeholder = { Text("What's on your mind? 🥰🎶", color = TextMuted) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(100.dp),
+                        .height(95.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = TextWhite,
                         unfocusedTextColor = TextWhite,
@@ -768,6 +808,38 @@ private fun CreateMomentDialog(
                         unfocusedBorderColor = Color(0xFF332D52)
                     )
                 )
+
+                // Attach Photo Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = {
+                            photoPickerLauncher.launch(
+                                androidx.activity.result.PickVisualMediaRequest(
+                                    androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
+                                )
+                            )
+                        },
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.weight(1f).height(38.dp)
+                    ) {
+                        Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(14.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(if (attachedImageUri.isNotBlank()) "Photo Added ✓" else "+ Gallery", fontSize = 11.sp)
+                    }
+
+                    OutlinedButton(
+                        onClick = { cameraLauncher.launch(null) },
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.weight(1f).height(38.dp)
+                    ) {
+                        Icon(Icons.Default.PhotoCamera, contentDescription = null, modifier = Modifier.size(14.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("+ Camera", fontSize = 11.sp)
+                    }
+                }
 
                 Text(
                     text = "Select Topic:",
@@ -804,7 +876,7 @@ private fun CreateMomentDialog(
             Button(
                 onClick = {
                     if (caption.isNotBlank()) {
-                        onSubmit(caption, selectedTopic)
+                        onSubmit(caption, selectedTopic, attachedImageUri)
                     }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF2B6D)),

@@ -33,6 +33,7 @@ import com.example.model.UserRole
 import com.example.model.WalletEntity
 import com.example.ui.components.AvatarView
 import com.example.ui.components.MedalDetailBottomSheet
+import com.example.util.CountryHelper
 import com.example.ui.components.MedalGraphic
 import com.example.ui.theme.*
 
@@ -58,6 +59,19 @@ fun ProfileScreen(
     onOpenLedger: () -> Unit,
     onOpenHostDashboard: () -> Unit,
     onOpenAgencyDashboard: () -> Unit,
+    isProfilePrivate: Boolean = false,
+    hideAge: Boolean = false,
+    hideCountry: Boolean = false,
+    allowMessages: Boolean = true,
+    allowProfileSharing: Boolean = true,
+    onToggleProfilePrivacy: () -> Unit = {},
+    onToggleHideAge: () -> Unit = {},
+    onToggleHideCountry: () -> Unit = {},
+    onToggleAllowMessages: () -> Unit = {},
+    onToggleAllowProfileSharing: () -> Unit = {},
+    onOpenProfileWizard: () -> Unit = {},
+    onShareProfile: () -> Unit = {},
+    onOpenPhotoUpload: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val userRole = try { UserRole.valueOf(user?.role ?: "USER") } catch (_: Exception) { UserRole.USER }
@@ -192,15 +206,30 @@ fun ProfileScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         // Profile Picture pulled from Firestore
-                        AvatarView(
-                            avatarUrl = profilePicture,
-                            nickname = displayName,
-                            size = 68.dp,
-                            frameName = user?.equippedFrame ?: "",
-                            vipTier = firestoreProfile?.vipTier ?: user?.vipTier ?: 0,
-                            level = level,
-                            isOfficial = firestoreProfile?.isOfficialVerified ?: user?.isOfficialVerified ?: false
-                        )
+                        // Profile Picture pulled from Firestore or local storage with camera tap badge
+                        Box(
+                            modifier = Modifier.clickable { onOpenPhotoUpload() },
+                            contentAlignment = Alignment.BottomEnd
+                        ) {
+                            AvatarView(
+                                avatarUrl = profilePicture,
+                                nickname = displayName,
+                                size = 68.dp,
+                                frameName = user?.equippedFrame ?: "",
+                                vipTier = firestoreProfile?.vipTier ?: user?.vipTier ?: 0,
+                                level = level,
+                                isOfficial = firestoreProfile?.isOfficialVerified ?: user?.isOfficialVerified ?: false
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(22.dp)
+                                    .clip(CircleShape)
+                                    .background(StarGoldPrimary),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.PhotoCamera, contentDescription = "Change Photo", tint = StarKingBgDark, modifier = Modifier.size(13.dp))
+                            }
+                        }
 
                         Spacer(modifier = Modifier.width(14.dp))
 
@@ -222,7 +251,7 @@ fun ProfileScreen(
                             Spacer(modifier = Modifier.height(3.dp))
 
                             Text(
-                                text = "User ID: ${user?.userId ?: "504094"}",
+                                text = "User ID: STAR-${user?.userId ?: "504094"}",
                                 color = StarGoldLight,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 12.sp
@@ -230,10 +259,12 @@ fun ProfileScreen(
 
                             Spacer(modifier = Modifier.height(2.dp))
 
+                            val flag = CountryHelper.getFlag(user?.country ?: "United States")
                             Text(
-                                text = "${user?.gender ?: "Star"} • ${user?.country ?: "Global"} • ${user?.language ?: "English"}",
-                                color = TextMuted,
-                                fontSize = 11.sp
+                                text = "${if (!hideAge) "Age 22 • " else ""}${if (!hideCountry) "$flag ${user?.country ?: "United States"}" else "Hidden Region"}",
+                                color = TextChampagne,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium
                             )
 
                             if (equippedMedal.isNotBlank()) {
@@ -281,7 +312,7 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    // Followers / Following / Gifts Count
+                    // Followers / Following / Coins / Gifts / Moments Count
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceAround
@@ -297,14 +328,77 @@ fun ProfileScreen(
                             onClick = onOpenFollowing
                         )
                         ProfileStatItem(
-                            label = "Gifts Received",
+                            label = "Coins",
+                            value = "${wallet?.coinBalance ?: 0}",
+                            onClick = onRechargeClick
+                        )
+                        ProfileStatItem(
+                            label = "Gifts",
                             value = "${firestoreProfile?.giftsReceivedCount ?: user?.giftsReceivedCount ?: 0}"
                         )
                         ProfileStatItem(
-                            label = "Medals",
-                            value = "${accumulatedMedalIds.size}",
-                            onClick = onOpenStore
+                            label = "Moments",
+                            value = "12"
                         )
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // The 3 Requested Buttons: Edit Profile | Settings | Share Profile
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = onOpenEditProfile,
+                            colors = ButtonDefaults.buttonColors(containerColor = StarGoldPrimary, contentColor = StarKingBgDark),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.weight(1f).height(40.dp)
+                        ) {
+                            Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Edit Profile", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        }
+
+                        FilledTonalButton(
+                            onClick = onOpenSettings,
+                            colors = ButtonDefaults.filledTonalButtonColors(containerColor = Color(0xFF281D4C), contentColor = Color.White),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.weight(1f).height(40.dp)
+                        ) {
+                            Icon(Icons.Default.Settings, contentDescription = null, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Settings", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        }
+
+                        OutlinedButton(
+                            onClick = onShareProfile,
+                            border = ButtonDefaults.outlinedButtonBorder.copy(brush = Brush.linearGradient(listOf(NeonCyan, Color(0xFF673AB7)))),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = NeonCyan),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.weight(1f).height(40.dp)
+                        ) {
+                            Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Share", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Multi-Step Profile Creation Wizard Button
+                    OutlinedButton(
+                        onClick = onOpenProfileWizard,
+                        border = ButtonDefaults.outlinedButtonBorder.copy(
+                            brush = Brush.linearGradient(listOf(StarGoldPrimary, Color(0xFFFF2B6D)))
+                        ),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = StarGoldLight),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth().height(40.dp)
+                    ) {
+                        Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(15.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Launch Multi-Step Profile Wizard ✨", fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -327,6 +421,116 @@ fun ProfileScreen(
                                 .fillMaxWidth()
                                 .height(6.dp)
                                 .clip(RoundedCornerShape(3.dp))
+                        )
+                    }
+                }
+            }
+        }
+
+        // --- PRIVACY & VISIBILITY SETTINGS CARD ---
+        item {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = StarKingSurfaceVariantDark),
+                shape = RoundedCornerShape(20.dp),
+                border = CardDefaults.outlinedCardBorder().copy(
+                    brush = Brush.linearGradient(listOf(Color(0xFF3F356C), Color(0xFF1E173E)))
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Security, contentDescription = null, tint = StarGoldPrimary, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Privacy & Visibility Controls", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    }
+
+                    HorizontalDivider(color = Color(0xFF281D4C))
+
+                    // 1. Public / Private Profile
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text("Private Profile", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                            Text("Only approved friends can view your moments", color = TextMuted, fontSize = 10.sp)
+                        }
+                        Switch(
+                            checked = isProfilePrivate,
+                            onCheckedChange = { onToggleProfilePrivacy() },
+                            colors = SwitchDefaults.colors(checkedThumbColor = StarGoldPrimary)
+                        )
+                    }
+
+                    // 2. Hide Age
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text("Hide Age", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                            Text("Don't display age on room profile cards", color = TextMuted, fontSize = 10.sp)
+                        }
+                        Switch(
+                            checked = hideAge,
+                            onCheckedChange = { onToggleHideAge() },
+                            colors = SwitchDefaults.colors(checkedThumbColor = StarGoldPrimary)
+                        )
+                    }
+
+                    // 3. Hide Country / Region
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text("Hide Country & Flag", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                            Text("Hide location flag in live room header", color = TextMuted, fontSize = 10.sp)
+                        }
+                        Switch(
+                            checked = hideCountry,
+                            onCheckedChange = { onToggleHideCountry() },
+                            colors = SwitchDefaults.colors(checkedThumbColor = StarGoldPrimary)
+                        )
+                    }
+
+                    // 4. Direct Messages
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text("Allow Direct Messages", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                            Text("Receive private messages from room listeners", color = TextMuted, fontSize = 10.sp)
+                        }
+                        Switch(
+                            checked = allowMessages,
+                            onCheckedChange = { onToggleAllowMessages() },
+                            colors = SwitchDefaults.colors(checkedThumbColor = NeonCyan)
+                        )
+                    }
+
+                    // 5. Profile Sharing
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text("Allow Profile Sharing", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                            Text("Allow friends to share profile link to rooms", color = TextMuted, fontSize = 10.sp)
+                        }
+                        Switch(
+                            checked = allowProfileSharing,
+                            onCheckedChange = { onToggleAllowProfileSharing() },
+                            colors = SwitchDefaults.colors(checkedThumbColor = NeonCyan)
                         )
                     }
                 }

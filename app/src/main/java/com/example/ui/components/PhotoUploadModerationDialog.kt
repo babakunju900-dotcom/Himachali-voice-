@@ -1,5 +1,6 @@
 package com.example.ui.components
 
+import android.graphics.Bitmap
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -19,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -29,12 +31,14 @@ import coil.compose.AsyncImage
 import com.example.moderation.ImageSafetyModerator
 import com.example.moderation.ModerationResult
 import com.example.ui.theme.*
+import com.example.util.CountryHelper
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
 fun PhotoUploadModerationDialog(
     title: String = "Update Profile Photo",
-    subtitle: String = "Select a photo from your gallery. All uploads undergo automatic real-time safety inspection.",
+    subtitle: String = "Select from Gallery or take with Camera. All uploads undergo automatic real-time safety inspection.",
     isCircularPreview: Boolean = true,
     currentPhotoUrl: String = "",
     onDismiss: () -> Unit,
@@ -44,23 +48,53 @@ fun PhotoUploadModerationDialog(
     val coroutineScope = rememberCoroutineScope()
 
     var selectedUri by remember { mutableStateOf<Uri?>(null) }
-    var isScanning by remember { mutableStateOf(false) }
+    var isProcessing by remember { mutableStateOf(false) }
+    var uploadProgress by remember { mutableFloatStateOf(0f) }
     var moderationResult by remember { mutableStateOf<ModerationResult?>(null) }
+    var cropZoom by remember { mutableFloatStateOf(1f) }
+    var showCropControls by remember { mutableStateOf(false) }
 
-    // Android Zero-Permission Photo Picker
+    fun processAndScanImage(uri: Uri) {
+        selectedUri = uri
+        isProcessing = true
+        moderationResult = null
+        uploadProgress = 0.1f
+
+        coroutineScope.launch {
+            // Animate compression & upload progress
+            delay(150)
+            uploadProgress = 0.45f
+            delay(150)
+            uploadProgress = 0.85f
+
+            // Real-time content moderation check
+            val result = ImageSafetyModerator.moderateImage(context, uri)
+            uploadProgress = 1.0f
+            delay(100)
+            isProcessing = false
+            moderationResult = result
+            if (result.isApproved) {
+                showCropControls = true
+            }
+        }
+    }
+
+    // Android Zero-Permission Gallery Photo Picker
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
         if (uri != null) {
-            selectedUri = uri
-            isScanning = true
-            moderationResult = null
-            coroutineScope.launch {
-                // Real-time scan
-                val result = ImageSafetyModerator.moderateImage(context, uri)
-                isScanning = false
-                moderationResult = result
-            }
+            processAndScanImage(uri)
+        }
+    }
+
+    // Camera Capture Launcher
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview()
+    ) { bitmap: Bitmap? ->
+        if (bitmap != null) {
+            val uri = CountryHelper.saveAndCompressBitmap(context, bitmap)
+            processAndScanImage(uri)
         }
     }
 
@@ -105,7 +139,7 @@ fun PhotoUploadModerationDialog(
                     .fillMaxWidth()
                     .padding(vertical = 4.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
                     text = subtitle,
@@ -114,16 +148,16 @@ fun PhotoUploadModerationDialog(
                     textAlign = TextAlign.Center
                 )
 
-                // Preview Area
+                // Preview Area with Zoom / Crop Support
                 Box(
                     modifier = Modifier
-                        .size(if (isCircularPreview) 130.dp else 180.dp, if (isCircularPreview) 130.dp else 110.dp)
+                        .size(if (isCircularPreview) 130.dp else 200.dp, if (isCircularPreview) 130.dp else 120.dp)
                         .clip(if (isCircularPreview) CircleShape else RoundedCornerShape(16.dp))
                         .background(StarKingSurfaceDark)
                         .border(
                             2.dp,
                             when {
-                                isScanning -> Brush.sweepGradient(listOf(StarGoldPrimary, NeonCyan, Color(0xFFFF2B6D)))
+                                isProcessing -> Brush.sweepGradient(listOf(StarGoldPrimary, NeonCyan, Color(0xFFFF2B6D)))
                                 moderationResult?.isApproved == true -> Brush.linearGradient(listOf(LiveGreen, Color(0xFF69F0AE)))
                                 moderationResult?.isApproved == false -> Brush.linearGradient(listOf(DangerRed, Color(0xFFFF5252)))
                                 else -> Brush.linearGradient(listOf(StarKingCardBorder, StarKingCardBorder))
@@ -137,7 +171,9 @@ fun PhotoUploadModerationDialog(
                             model = selectedUri,
                             contentDescription = "Selected Photo Preview",
                             contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .graphicsLayer(scaleX = cropZoom, scaleY = cropZoom)
                         )
                     } else if (currentPhotoUrl.isNotBlank()) {
                         AsyncImage(
@@ -159,25 +195,30 @@ fun PhotoUploadModerationDialog(
                         }
                     }
 
-                    // Scanning Overlay Indicator
-                    if (isScanning) {
+                    // Progress / Compression / Scanning Overlay
+                    if (isProcessing) {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(Color.Black.copy(alpha = 0.65f)),
+                                .background(Color.Black.copy(alpha = 0.75f)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.padding(8.dp)
+                            ) {
                                 CircularProgressIndicator(
+                                    progress = { uploadProgress },
                                     color = StarGoldPrimary,
-                                    modifier = Modifier.size(28.dp),
-                                    strokeWidth = 2.5.dp
+                                    modifier = Modifier.size(32.dp),
+                                    strokeWidth = 3.dp,
+                                    trackColor = Color(0xFF3A3450)
                                 )
                                 Spacer(modifier = Modifier.height(6.dp))
                                 Text(
-                                    text = "Scanning Safety...",
+                                    text = "Compressing & Scanning... ${(uploadProgress * 100).toInt()}%",
                                     color = Color.White,
-                                    fontSize = 11.sp,
+                                    fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -185,31 +226,65 @@ fun PhotoUploadModerationDialog(
                     }
                 }
 
-                // Pick / Change Photo Button
-                OutlinedButton(
-                    onClick = {
-                        photoPickerLauncher.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                // Crop / Zoom Reposition Slider
+                if (showCropControls && moderationResult?.isApproved == true) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Crop & Reposition Zoom", color = TextWhite, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                            Text("${(cropZoom * 100).toInt()}%", color = StarGoldLight, fontSize = 11.sp)
+                        }
+                        Slider(
+                            value = cropZoom,
+                            onValueChange = { cropZoom = it },
+                            valueRange = 1f..2.5f,
+                            colors = SliderDefaults.colors(
+                                thumbColor = StarGoldPrimary,
+                                activeTrackColor = StarGoldPrimary
+                            )
                         )
-                    },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = StarGoldLight),
-                    border = ButtonDefaults.outlinedButtonBorder.copy(
-                        brush = Brush.linearGradient(listOf(StarGoldPrimary, Color(0xFFFF2B6D)))
-                    ),
-                    modifier = Modifier.fillMaxWidth()
+                    }
+                }
+
+                // Choose Gallery or Camera Buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.PhotoLibrary,
-                        contentDescription = "Choose from gallery",
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = if (selectedUri != null) "Choose Different Photo" else "Select From Device Gallery",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp
-                    )
+                    OutlinedButton(
+                        onClick = {
+                            photoPickerLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = StarGoldLight),
+                        border = ButtonDefaults.outlinedButtonBorder.copy(
+                            brush = Brush.linearGradient(listOf(StarGoldPrimary, Color(0xFFFF2B6D)))
+                        ),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Gallery", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
+
+                    OutlinedButton(
+                        onClick = { cameraLauncher.launch(null) },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = NeonCyan),
+                        border = ButtonDefaults.outlinedButtonBorder.copy(
+                            brush = Brush.linearGradient(listOf(NeonCyan, Color(0xFF673AB7)))
+                        ),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(Icons.Default.PhotoCamera, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Camera", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
                 }
 
                 // Moderation Status Banner
@@ -240,7 +315,7 @@ fun PhotoUploadModerationDialog(
                                             fontSize = 12.sp
                                         )
                                         Text(
-                                            text = result.details,
+                                            text = "Compressed & approved for instant publication.",
                                             color = TextChampagne,
                                             fontSize = 10.sp
                                         )
@@ -266,7 +341,7 @@ fun PhotoUploadModerationDialog(
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Column {
                                         Text(
-                                            text = "⛔ Upload Rejected: Inappropriate Content",
+                                            text = "⛔ Upload Rejected: Image Rules Violated",
                                             color = DangerRed,
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 12.sp
@@ -278,9 +353,9 @@ fun PhotoUploadModerationDialog(
                                             fontSize = 11.sp
                                         )
                                         Text(
-                                            text = "Sexual, explicit, or policy-violating imagery is strictly prohibited to maintain community safety.",
+                                            text = "Please choose another appropriate photo. Acceptable photos will be saved securely.",
                                             color = TextMuted,
-                                            fontSize = 9.sp
+                                            fontSize = 10.sp
                                         )
                                     }
                                 }
@@ -291,7 +366,7 @@ fun PhotoUploadModerationDialog(
             }
         },
         confirmButton = {
-            val isReadyToSave = selectedUri != null && moderationResult?.isApproved == true && !isScanning
+            val isReadyToSave = selectedUri != null && moderationResult?.isApproved == true && !isProcessing
             Button(
                 onClick = {
                     selectedUri?.let { uri ->

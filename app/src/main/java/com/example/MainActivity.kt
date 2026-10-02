@@ -131,6 +131,12 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
     val moments by viewModel.moments.collectAsStateWithLifecycle()
     val momentTopics by viewModel.momentTopics.collectAsStateWithLifecycle()
     val showProfilePhotoUpload by viewModel.showProfilePhotoUpload.collectAsStateWithLifecycle()
+    val showProfileCreationWizard by viewModel.showProfileCreationWizard.collectAsStateWithLifecycle()
+    val isProfilePrivate by viewModel.isProfilePrivate.collectAsStateWithLifecycle()
+    val hideAge by viewModel.hideAge.collectAsStateWithLifecycle()
+    val hideCountry by viewModel.hideCountry.collectAsStateWithLifecycle()
+    val allowMessages by viewModel.allowMessages.collectAsStateWithLifecycle()
+    val allowProfileSharing by viewModel.allowProfileSharing.collectAsStateWithLifecycle()
     var showStarVoicePromoModal by remember { mutableStateOf(false) }
 
     // Toast listener
@@ -209,7 +215,7 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                             unreadNotifications = unreadNotifs,
                             onAvatarClick = { viewModel.setTab(BottomNavTab.PROFILE) },
                             onCoinClick = { viewModel.openRecharge() },
-                            onSearchClick = { viewModel.setTab(BottomNavTab.SQUARE) },
+                            onSearchClick = { viewModel.setTab(BottomNavTab.ROOMS) },
                             onNotificationClick = {
                                 viewModel.markNotificationsRead()
                                 viewModel.setTab(BottomNavTab.MESSAGES)
@@ -242,12 +248,12 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                                 modifier = Modifier.testTag("tab_home")
                             )
 
-                            // 2. Square (Rooms & Discovery)
+                            // 2. Moments
                             NavigationBarItem(
-                                selected = currentTab == BottomNavTab.SQUARE,
-                                onClick = { viewModel.setTab(BottomNavTab.SQUARE) },
-                                icon = { Icon(Icons.Default.Explore, contentDescription = "Square") },
-                                label = { Text("Square", fontSize = 11.sp, fontWeight = if (currentTab == BottomNavTab.SQUARE) FontWeight.Bold else FontWeight.Normal) },
+                                selected = currentTab == BottomNavTab.MOMENTS,
+                                onClick = { viewModel.setTab(BottomNavTab.MOMENTS) },
+                                icon = { Icon(Icons.Default.CameraAlt, contentDescription = "Moments") },
+                                label = { Text("Moments", fontSize = 11.sp, fontWeight = if (currentTab == BottomNavTab.MOMENTS) FontWeight.Bold else FontWeight.Normal) },
                                 colors = NavigationBarItemDefaults.colors(
                                     selectedIconColor = Color(0xFFFF2B6D),
                                     selectedTextColor = Color(0xFFFF2B6D),
@@ -255,13 +261,13 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                                     unselectedIconColor = TextMuted,
                                     unselectedTextColor = TextMuted
                                 ),
-                                modifier = Modifier.testTag("tab_square")
+                                modifier = Modifier.testTag("tab_moments")
                             )
 
-                            // 3. Moment (Center Capsule Action Button as seen in screenshots)
+                            // 3. Rooms (Center Sound Wave Action Capsule)
                             NavigationBarItem(
-                                selected = currentTab == BottomNavTab.MOMENT,
-                                onClick = { viewModel.setTab(BottomNavTab.MOMENT) },
+                                selected = currentTab == BottomNavTab.ROOMS,
+                                onClick = { viewModel.setTab(BottomNavTab.ROOMS) },
                                 icon = {
                                     Box(
                                         modifier = Modifier
@@ -290,7 +296,7 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                                         }
                                     }
                                 },
-                                label = { Text("Moment", fontSize = 11.sp, fontWeight = if (currentTab == BottomNavTab.MOMENT) FontWeight.Bold else FontWeight.Normal) },
+                                label = { Text("Rooms", fontSize = 11.sp, fontWeight = if (currentTab == BottomNavTab.ROOMS) FontWeight.Bold else FontWeight.Normal) },
                                 colors = NavigationBarItemDefaults.colors(
                                     selectedIconColor = Color(0xFFFF2B6D),
                                     selectedTextColor = Color(0xFFFF2B6D),
@@ -298,10 +304,10 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                                     unselectedIconColor = TextMuted,
                                     unselectedTextColor = TextMuted
                                 ),
-                                modifier = Modifier.testTag("tab_moment")
+                                modifier = Modifier.testTag("tab_rooms")
                             )
 
-                            // 4. Message
+                            // 4. Messages
                             NavigationBarItem(
                                 selected = currentTab == BottomNavTab.MESSAGES,
                                 onClick = { viewModel.setTab(BottomNavTab.MESSAGES) },
@@ -315,10 +321,10 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                                             }
                                         }
                                     ) {
-                                        Icon(Icons.Default.ChatBubble, contentDescription = "Message")
+                                        Icon(Icons.Default.ChatBubble, contentDescription = "Messages")
                                     }
                                 },
-                                label = { Text("Message", fontSize = 11.sp, fontWeight = if (currentTab == BottomNavTab.MESSAGES) FontWeight.Bold else FontWeight.Normal) },
+                                label = { Text("Messages", fontSize = 11.sp, fontWeight = if (currentTab == BottomNavTab.MESSAGES) FontWeight.Bold else FontWeight.Normal) },
                                 colors = NavigationBarItemDefaults.colors(
                                     selectedIconColor = Color(0xFFFF2B6D),
                                     selectedTextColor = Color(0xFFFF2B6D),
@@ -329,12 +335,12 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                                 modifier = Modifier.testTag("tab_messages")
                             )
 
-                            // 5. Me (Profile)
+                            // 5. Profile
                             NavigationBarItem(
                                 selected = currentTab == BottomNavTab.PROFILE,
                                 onClick = { viewModel.setTab(BottomNavTab.PROFILE) },
-                                icon = { Icon(Icons.Default.Person, contentDescription = "Me") },
-                                label = { Text("Me", fontSize = 11.sp, fontWeight = if (currentTab == BottomNavTab.PROFILE) FontWeight.Bold else FontWeight.Normal) },
+                                icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
+                                label = { Text("Profile", fontSize = 11.sp, fontWeight = if (currentTab == BottomNavTab.PROFILE) FontWeight.Bold else FontWeight.Normal) },
                                 colors = NavigationBarItemDefaults.colors(
                                     selectedIconColor = Color(0xFFFF2B6D),
                                     selectedTextColor = Color(0xFFFF2B6D),
@@ -359,11 +365,23 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                                     onRoomClick = { room -> viewModel.enterRoom(room.roomId) },
                                     onHostClick = { host -> viewModel.inspectUser(host) },
                                     onCreateRoomClick = { viewModel.openCreateRoom() },
-                                    onEventBannerClick = { viewModel.setTab(BottomNavTab.SQUARE) },
+                                    onEventBannerClick = { viewModel.setTab(BottomNavTab.ROOMS) },
                                     onStarVoiceBannerClick = { showStarVoicePromoModal = true }
                                 )
                             }
-                            BottomNavTab.SQUARE -> {
+                            BottomNavTab.MOMENTS -> {
+                                MomentScreen(
+                                    moments = moments,
+                                    topics = momentTopics,
+                                    currentUserId = currentUser?.userId ?: 504094L,
+                                    onLikeMoment = { momentId -> viewModel.likeMoment(momentId) },
+                                    onFollowUser = { userId -> viewModel.followUserFromMoment(userId) },
+                                    onPostComment = { momentId, text -> viewModel.postMomentComment(momentId, text) },
+                                    onCreateMoment = { caption, hashtag, imageUri -> viewModel.createMoment(caption, hashtag, imageUri) },
+                                    onDeleteMoment = { momentId -> viewModel.deleteMoment(momentId) }
+                                )
+                            }
+                            BottomNavTab.ROOMS -> {
                                 RoomsScreen(
                                     rooms = liveRooms,
                                     searchQuery = searchQuery,
@@ -372,16 +390,6 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                                     onCategorySelect = { viewModel.setSelectedCategory(it) },
                                     onRoomClick = { room -> viewModel.enterRoom(room.roomId) },
                                     onCreateRoomClick = { viewModel.openCreateRoom() }
-                                )
-                            }
-                            BottomNavTab.MOMENT -> {
-                                MomentScreen(
-                                    moments = moments,
-                                    topics = momentTopics,
-                                    onLikeMoment = { momentId -> viewModel.likeMoment(momentId) },
-                                    onFollowUser = { userId -> viewModel.followUserFromMoment(userId) },
-                                    onPostComment = { momentId, text -> viewModel.postMomentComment(momentId, text) },
-                                    onCreateMoment = { caption, hashtag -> viewModel.createMoment(caption, hashtag) }
                                 )
                             }
                             BottomNavTab.MESSAGES -> {
@@ -400,6 +408,26 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                                     isFirestoreSyncing = isFirestoreSyncing,
                                     userCustomizations = userCustomizations,
                                     storeMedals = storeCustomizations.filter { it.type == "MEDAL" },
+                                    isProfilePrivate = isProfilePrivate,
+                                    hideAge = hideAge,
+                                    hideCountry = hideCountry,
+                                    allowMessages = allowMessages,
+                                    allowProfileSharing = allowProfileSharing,
+                                    onToggleProfilePrivacy = { viewModel.toggleProfilePrivacy() },
+                                    onToggleHideAge = { viewModel.toggleHideAge() },
+                                    onToggleHideCountry = { viewModel.toggleHideCountry() },
+                                    onToggleAllowMessages = { viewModel.toggleAllowMessages() },
+                                    onToggleAllowProfileSharing = { viewModel.toggleAllowProfileSharing() },
+                                    onOpenProfileWizard = { viewModel.openProfileCreationWizard() },
+                                    onOpenPhotoUpload = { viewModel.openProfilePhotoUpload() },
+                                    onShareProfile = {
+                                        val sendIntent = android.content.Intent().apply {
+                                            action = android.content.Intent.ACTION_SEND
+                                            putExtra(android.content.Intent.EXTRA_TEXT, "Connect with ${currentUser?.nickname ?: "me"} on STAR Voice Chat! User ID: STAR-${currentUser?.userId ?: 504094} 🌟")
+                                            type = "text/plain"
+                                        }
+                                        context.startActivity(android.content.Intent.createChooser(sendIntent, "Share Star Voice Profile"))
+                                    },
                                     onSyncFirestore = { viewModel.syncProfileWithFirestore() },
                                     onEquipMedal = { medalId -> viewModel.equipStoreItem(medalId) },
                                     onRechargeClick = { viewModel.openRecharge() },
@@ -430,7 +458,7 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                 onDismiss = { showStarVoicePromoModal = false },
                 onEnterVoiceRooms = {
                     showStarVoicePromoModal = false
-                    viewModel.setTab(BottomNavTab.SQUARE)
+                    viewModel.setTab(BottomNavTab.ROOMS)
                 },
                 onClaimRewards = {
                     viewModel.rechargeCoins("pkg_coins_500")
@@ -458,6 +486,7 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
         // Create Room Dialog
         if (showCreateRoomModal) {
             CreateRoomDialog(
+                hostUser = currentUser,
                 onDismiss = { viewModel.closeCreateRoom() },
                 onCreateRoom = { name, desc, cat, lang, seats, welcome, isPrivate, pass, coverUrl ->
                     viewModel.createRoom(name, desc, cat, lang, seats, welcome, isPrivate, pass, coverUrl)
@@ -710,13 +739,24 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
         if (showProfilePhotoUpload) {
             PhotoUploadModerationDialog(
                 title = "Update Profile Photo",
-                subtitle = "Select a photo from your gallery. All uploads undergo automatic real-time safety inspection.",
+                subtitle = "Select a photo from gallery or take with Camera. Real-time safety inspection automatically verifies the image.",
                 isCircularPreview = true,
                 currentPhotoUrl = currentUser?.avatarUrl ?: "",
                 onDismiss = { viewModel.closeProfilePhotoUpload() },
                 onPhotoApprovedAndSaved = { approvedUri ->
                     viewModel.updateUserProfilePhoto(approvedUri)
                     viewModel.closeProfilePhotoUpload()
+                }
+            )
+        }
+
+        // Multi-Step Profile Creation Wizard Dialog
+        if (showProfileCreationWizard) {
+            ProfileCreationWizardDialog(
+                initialUserId = currentUser?.userId ?: 504094L,
+                onDismiss = { viewModel.closeProfileCreationWizard() },
+                onSaveProfile = { userId, nick, age, country, bio, avatar ->
+                    viewModel.saveProfileFromWizard(userId, nick, age, country, bio, avatar)
                 }
             )
         }

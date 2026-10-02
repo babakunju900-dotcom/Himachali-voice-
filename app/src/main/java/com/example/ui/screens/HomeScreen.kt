@@ -25,6 +25,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 import com.example.model.RoomEntity
 import com.example.model.UserEntity
 import com.example.ui.components.AvatarView
@@ -376,6 +378,148 @@ fun HomeScreen(
                                         Text("🌟 🚀", fontSize = 28.sp)
                                     }
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // --- 4.5 DEDICATED OFFICIAL STAR VOICE SUPPORT ROOM (Matching Requirement 13) ---
+            item {
+                val officialRoom = rooms.find { it.category.equals("Official", ignoreCase = true) || it.name.contains("Customer Support", ignoreCase = true) }
+                if (officialRoom != null) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 6.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(bottom = 6.dp)
+                        ) {
+                            Text("⭐", fontSize = 14.sp)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "OFFICIAL VERIFIED DESK",
+                                color = StarGoldPrimary,
+                                fontWeight = FontWeight.Black,
+                                fontSize = 11.sp,
+                                letterSpacing = 1.sp
+                            )
+                        }
+
+                        Card(
+                            onClick = { onRoomClick(officialRoom) },
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFF1B1535)),
+                            shape = RoundedCornerShape(18.dp),
+                            border = CardDefaults.outlinedCardBorder().copy(
+                                brush = Brush.horizontalGradient(
+                                    listOf(StarGoldPrimary, Color(0xFF00E5FF), StarGoldLight)
+                                ),
+                                width = 1.5.dp
+                            ),
+                            modifier = Modifier.fillMaxWidth().testTag("official_support_room_card")
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                // Star Voice Customer Support Logo / Badge
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier
+                                        .size(60.dp)
+                                        .clip(RoundedCornerShape(16.dp))
+                                        .background(
+                                            Brush.linearGradient(
+                                                listOf(Color(0xFFFFD54F), Color(0xFFFF6F00), Color(0xFFE91E63))
+                                            )
+                                        )
+                                ) {
+                                    Text("🌟", fontSize = 28.sp)
+                                    Box(
+                                        modifier = Modifier
+                                            .align(Alignment.BottomEnd)
+                                            .size(20.dp)
+                                            .clip(CircleShape)
+                                            .background(LiveGreen),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text("✓", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Black)
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.width(12.dp))
+
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = officialRoom.name,
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Black,
+                                            fontSize = 15.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(6.dp))
+                                                .background(StarGoldPrimary)
+                                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                                        ) {
+                                            Text(
+                                                text = "OFFICIAL",
+                                                color = Color.Black,
+                                                fontWeight = FontWeight.Black,
+                                                fontSize = 9.sp
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(3.dp))
+
+                                    Text(
+                                        text = officialRoom.description.ifBlank { "24/7 Verified Customer Support Desk • Real-time host & agency assistance" },
+                                        color = TextChampagne,
+                                        fontSize = 11.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+
+                                    Spacer(modifier = Modifier.height(6.dp))
+
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(6.dp))
+                                                .background(LiveGreen.copy(alpha = 0.2f))
+                                                .border(1.dp, LiveGreen, RoundedCornerShape(6.dp))
+                                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                                        ) {
+                                            Text("● LIVE AGENTS ACTIVE", color = LiveGreen, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                        }
+
+                                        Text(
+                                            text = "👥 ${officialRoom.onlineCount} online",
+                                            color = StarGoldLight,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                    }
+                                }
+
+                                Icon(
+                                    imageVector = Icons.Default.HeadsetMic,
+                                    contentDescription = "Support",
+                                    tint = StarGoldPrimary,
+                                    modifier = Modifier.size(24.dp)
+                                )
                             }
                         }
                     }
@@ -785,13 +929,41 @@ fun RoomCard(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            AvatarView(
-                avatarUrl = room.hostAvatar,
-                nickname = room.hostName,
-                size = 56.dp,
-                vipTier = if (room.category == "Official") 5 else 1,
-                isOfficial = room.category.equals("Official", ignoreCase = true)
-            )
+            Box(
+                modifier = Modifier.size(56.dp)
+            ) {
+                if (room.coverPhotoUrl.isNotBlank()) {
+                    AsyncImage(
+                        model = room.coverPhotoUrl,
+                        contentDescription = "Room Cover",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(12.dp))
+                    )
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .offset(x = 4.dp, y = 4.dp)
+                    ) {
+                        AvatarView(
+                            avatarUrl = room.hostAvatar,
+                            nickname = room.hostName,
+                            size = 22.dp,
+                            vipTier = if (room.category == "Official") 5 else 1,
+                            isOfficial = room.category.equals("Official", ignoreCase = true)
+                        )
+                    }
+                } else {
+                    AvatarView(
+                        avatarUrl = room.hostAvatar,
+                        nickname = room.hostName,
+                        size = 56.dp,
+                        vipTier = if (room.category == "Official") 5 else 1,
+                        isOfficial = room.category.equals("Official", ignoreCase = true)
+                    )
+                }
+            }
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {

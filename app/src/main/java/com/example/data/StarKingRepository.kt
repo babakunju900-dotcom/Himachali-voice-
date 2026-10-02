@@ -534,6 +534,10 @@ class StarKingRepository(
         dao.updateRoomCoverPhoto(roomId, coverPhotoUrl)
     }
 
+    suspend fun updateUser(user: UserEntity) = withContext(Dispatchers.IO) {
+        dao.updateUser(user)
+    }
+
     suspend fun updateUserProfilePhoto(userId: Long, newAvatarUrl: String) = withContext(Dispatchers.IO) {
         dao.updateUserAvatar(userId, newAvatarUrl)
     }

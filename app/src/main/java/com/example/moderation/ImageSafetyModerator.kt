@@ -10,9 +10,9 @@ import kotlinx.coroutines.withContext
 
 data class ModerationResult(
     val isApproved: Boolean,
-    val reason: String,
-    val details: String,
-    val safetyScore: Float
+    val reason: String = "Community Safe",
+    val details: String = "Passed automated safety scan",
+    val safetyScore: Float = 1.0f
 )
 
 object ImageSafetyModerator {

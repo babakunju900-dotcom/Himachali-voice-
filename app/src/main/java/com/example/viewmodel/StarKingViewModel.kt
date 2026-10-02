@@ -15,8 +15,8 @@ import kotlinx.coroutines.launch
 
 enum class BottomNavTab {
     HOME,
-    SQUARE,
-    MOMENT,
+    MOMENTS,
+    ROOMS,
     MESSAGES,
     PROFILE
 }
@@ -262,19 +262,19 @@ class StarKingViewModel(application: Application) : AndroidViewModel(application
         showToast("Comment posted! 💬")
     }
 
-    fun createMoment(caption: String, hashtag: String) {
+    fun createMoment(caption: String, hashtag: String, imageUri: String = "") {
         val user = currentUser.value
         val newMoment = MomentEntity(
             id = "moment_${System.currentTimeMillis()}",
             userId = user?.userId ?: 504094L,
-            authorName = user?.nickname ?: "Star King User",
+            authorName = user?.nickname ?: "Star Voice User",
             authorAvatar = user?.avatarUrl ?: "avatar_user",
             authorGender = user?.gender ?: "Female",
             vipTier = user?.vipTier ?: 1,
             badgeTag = "NEW",
             timestampText = "Just now",
             caption = caption,
-            images = listOf("room_festival_1"),
+            images = if (imageUri.isNotBlank()) listOf(imageUri) else listOf("room_festival_1"),
             likesCount = 0,
             isLiked = false,
             commentsCount = 0,
@@ -283,6 +283,11 @@ class StarKingViewModel(application: Application) : AndroidViewModel(application
         )
         _moments.value = listOf(newMoment) + _moments.value
         showToast("Moment published to feed! 📸")
+    }
+
+    fun deleteMoment(momentId: String) {
+        _moments.value = _moments.value.filterNot { it.id == momentId }
+        showToast("Moment deleted from feed")
     }
 
     // Moderation & Support
@@ -356,6 +361,65 @@ class StarKingViewModel(application: Application) : AndroidViewModel(application
 
     private val _showEditProfileModal = MutableStateFlow(false)
     val showEditProfileModal: StateFlow<Boolean> = _showEditProfileModal.asStateFlow()
+
+    private val _showProfileCreationWizard = MutableStateFlow(false)
+    val showProfileCreationWizard: StateFlow<Boolean> = _showProfileCreationWizard.asStateFlow()
+
+    fun openProfileCreationWizard() { _showProfileCreationWizard.value = true }
+    fun closeProfileCreationWizard() { _showProfileCreationWizard.value = false }
+
+    fun saveProfileFromWizard(
+        userId: Long,
+        displayName: String,
+        age: Int,
+        country: String,
+        bio: String,
+        avatarUrl: String
+    ) {
+        viewModelScope.launch {
+            val user = currentUser.value
+            if (user != null) {
+                repository.updateUserProfile(
+                    userId = user.userId,
+                    nickname = displayName,
+                    bio = bio,
+                    gender = user.gender,
+                    country = country,
+                    avatarUrl = avatarUrl
+                )
+            }
+            closeProfileCreationWizard()
+            showToast("Profile created successfully! Welcome to Star Voice 🌟")
+        }
+    }
+
+    // Privacy & Visibility Settings
+    private val _isProfilePrivate = MutableStateFlow(false)
+    val isProfilePrivate: StateFlow<Boolean> = _isProfilePrivate.asStateFlow()
+
+    private val _hideAge = MutableStateFlow(false)
+    val hideAge: StateFlow<Boolean> = _hideAge.asStateFlow()
+
+    private val _hideCountry = MutableStateFlow(false)
+    val hideCountry: StateFlow<Boolean> = _hideCountry.asStateFlow()
+
+    private val _allowMessages = MutableStateFlow(true)
+    val allowMessages: StateFlow<Boolean> = _allowMessages.asStateFlow()
+
+    private val _allowProfileSharing = MutableStateFlow(true)
+    val allowProfileSharing: StateFlow<Boolean> = _allowProfileSharing.asStateFlow()
+
+    fun toggleProfilePrivacy() { _isProfilePrivate.value = !_isProfilePrivate.value }
+    fun toggleHideAge() { _hideAge.value = !_hideAge.value }
+    fun toggleHideCountry() { _hideCountry.value = !_hideCountry.value }
+    fun toggleAllowMessages() { _allowMessages.value = !_allowMessages.value }
+    fun toggleAllowProfileSharing() { _allowProfileSharing.value = !_allowProfileSharing.value }
+    fun shareProfile() {
+        val user = currentUser.value
+        val nick = user?.nickname ?: "Star Voice User"
+        val uid = user?.userId ?: 504094L
+        showToast("Profile link copied for $nick (ID: $uid) 📋")
+    }
 
     private val _showProfilePhotoUpload = MutableStateFlow(false)
     val showProfilePhotoUpload: StateFlow<Boolean> = _showProfilePhotoUpload.asStateFlow()
