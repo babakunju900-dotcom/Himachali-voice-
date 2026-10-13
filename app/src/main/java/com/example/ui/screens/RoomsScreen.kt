@@ -152,7 +152,7 @@ fun RoomsScreen(
                                     Spacer(modifier = Modifier.height(3.dp))
 
                                     Text(
-                                        text = "Official STAR VOICE 24/7 Verified Support & Inquiries",
+                                        text = "Official HP VOICE 24/7 Verified Support & Inquiries",
                                         color = TextChampagne,
                                         fontSize = 11.sp
                                     )

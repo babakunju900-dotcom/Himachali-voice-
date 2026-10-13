@@ -103,7 +103,7 @@ fun HostDashboardDialog(
                                     fontSize = 15.sp
                                 )
                                 Text(
-                                    text = "Star King Creator ID: ${user?.userId} • Level ${user?.level}",
+                                    text = "HP VOICE Creator ID: ${user?.userId} • Level ${user?.level}",
                                     color = StarGoldLight,
                                     fontSize = 11.sp
                                 )

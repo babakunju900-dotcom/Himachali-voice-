@@ -425,7 +425,7 @@ fun SettingsScreen(
             AlertDialog(
                 onDismissRequest = { showLogoutConfirmDialog = false },
                 title = { Text("Log Out?", color = TextWhite, fontWeight = FontWeight.Bold) },
-                text = { Text("Are you sure you want to log out of Star King Voice Chat? Your session will end.", color = TextMuted) },
+                text = { Text("Are you sure you want to log out of HP VOICE? Your session will end.", color = TextMuted) },
                 confirmButton = {
                     Button(
                         onClick = {
@@ -455,7 +455,7 @@ fun SettingsScreen(
                 title = { Text("Delete Account Permanently?", color = DangerRed, fontWeight = FontWeight.Bold) },
                 text = {
                     Text(
-                        text = "This action CANNOT be undone. Your permanent User ID (${user?.userId}), wallet coin balance, virtual gifts received, and profile history will be permanently deleted from Star King.",
+                        text = "This action CANNOT be undone. Your permanent User ID (${user?.userId}), wallet coin balance, virtual gifts received, and profile history will be permanently deleted from HP VOICE.",
                         color = TextMuted
                     )
                 },

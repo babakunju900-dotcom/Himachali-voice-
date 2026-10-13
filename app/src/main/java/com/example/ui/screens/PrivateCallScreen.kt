@@ -123,7 +123,7 @@ fun PrivateCallScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = if (session.isVideo) "STAR VOICE VIDEO CALL" else "STAR VOICE DIRECT CALL",
+                    text = if (session.isVideo) "HP VOICE VIDEO CALL" else "HP VOICE DIRECT CALL",
                     color = TextChampagne,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium
@@ -176,7 +176,7 @@ fun PrivateCallScreen(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = "ID: STAR-$otherUserId",
+                    text = "ID: HP-$otherUserId",
                     color = StarGoldPrimary,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 13.sp

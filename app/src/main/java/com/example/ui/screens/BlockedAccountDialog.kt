@@ -63,7 +63,7 @@ fun BlockedAccountDialog(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Your Star King Voice Chat account (ID: ${user.userId}) has been suspended due to violations of community safety guidelines.",
+                text = "Your HP VOICE account (ID: ${user.userId}) has been suspended due to violations of community safety guidelines.",
                 color = TextMuted,
                 fontSize = 13.sp,
                 lineHeight = 18.sp
@@ -80,7 +80,7 @@ fun BlockedAccountDialog(
                     Text(text = "Suspension Details:", color = StarGoldLight, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = "Reason: ${user.banReason.ifBlank { "Violation of Star King Community Guidelines" }}",
+                        text = "Reason: ${user.banReason.ifBlank { "Violation of HP VOICE Community Guidelines" }}",
                         color = TextWhite,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold

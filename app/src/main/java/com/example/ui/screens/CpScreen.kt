@@ -105,7 +105,7 @@ fun CpScreen(
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "STAR VOICE CP",
+                                text = "HP VOICE CP",
                                 color = Color.White,
                                 fontWeight = FontWeight.Black,
                                 fontSize = 18.sp
@@ -315,7 +315,7 @@ fun CpScreen(
                                                     Spacer(modifier = Modifier.width(4.dp))
                                                     Text("💍", fontSize = 14.sp)
                                                 }
-                                                Text("CP ID: STAR-$partnerId • Intimacy ${cp.intimacyScore} 🌟", color = StarGoldLight, fontSize = 11.sp)
+                                                Text("CP ID: HP-$partnerId • Intimacy ${cp.intimacyScore} 🌟", color = StarGoldLight, fontSize = 11.sp)
                                                 Text("Status: ACCEPTED & CONNECTED", color = LiveGreen, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                                             }
                                         }
@@ -449,7 +449,7 @@ fun CpScreen(
                                             Spacer(modifier = Modifier.height(2.dp))
 
                                             Text(
-                                                text = "ID: STAR-${candidate.userId} • $flag ${candidate.country}",
+                                                text = "ID: HP-${candidate.userId} • $flag ${candidate.country}",
                                                 color = TextMuted,
                                                 fontSize = 11.sp
                                             )

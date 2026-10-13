@@ -31,7 +31,7 @@ import com.example.model.StoreCustomizationEntity
 import com.example.ui.theme.*
 
 /**
- * 3D-styled Luxury Medal Graphic representing each badge from the Star King Medal Wall
+ * 3D-styled Luxury Medal Graphic representing each badge from the HP VOICE Medal Wall
  */
 @Composable
 fun MedalGraphic(
@@ -499,7 +499,7 @@ fun MedalDetailBottomSheet(
             )
 
             Text(
-                text = "Official Star King Voice Room Honor Medal",
+                text = "Official HP VOICE Room Honor Medal",
                 color = Color(0xFF9CA3AF),
                 fontSize = 12.sp,
                 textAlign = TextAlign.Center

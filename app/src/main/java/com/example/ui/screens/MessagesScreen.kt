@@ -138,7 +138,7 @@ fun MessagesScreen(
                         Column(modifier = Modifier.weight(1f)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    text = "Star King Customer Support 24/7",
+                                    text = "HP VOICE Customer Support 24/7",
                                     color = StarGoldLight,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 13.sp,

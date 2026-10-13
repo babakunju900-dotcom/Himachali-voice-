@@ -65,7 +65,7 @@ fun ProfileCreationWizardDialog(
     var displayName by remember { mutableStateOf("") }
     var ageText by remember { mutableStateOf("22") }
     var selectedCountry by remember { mutableStateOf("United States") }
-    var bioText by remember { mutableStateOf("Living the Star Voice party vibes! 🌟") }
+    var bioText by remember { mutableStateOf("Living the HP VOICE party vibes! 🌟") }
     val generatedUserId = remember { initialUserId }
 
     // Country Dropdown
@@ -130,7 +130,7 @@ fun ProfileCreationWizardDialog(
             ) {
                 Column {
                     Text(
-                        text = "STAR VOICE CHAT",
+                        text = "HP VOICE",
                         color = StarGoldLight,
                         fontWeight = FontWeight.Black,
                         fontSize = 11.sp,
@@ -427,7 +427,7 @@ fun ProfileCreationWizardDialog(
                                     ) {
                                         Column {
                                             Text("Permanent User ID", color = TextMuted, fontSize = 11.sp)
-                                            Text("STAR-$generatedUserId", color = StarGoldPrimary, fontWeight = FontWeight.Black, fontSize = 17.sp)
+                                            Text("HP-$generatedUserId", color = StarGoldPrimary, fontWeight = FontWeight.Black, fontSize = 17.sp)
                                         }
                                         Box(
                                             modifier = Modifier
@@ -625,7 +625,7 @@ fun ProfileCreationWizardDialog(
                                         // Display Name & Country Flag
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             Text(
-                                                text = displayName.ifBlank { "Star Voice User" },
+                                                text = displayName.ifBlank { "HP VOICE User" },
                                                 color = Color.White,
                                                 fontWeight = FontWeight.Black,
                                                 fontSize = 18.sp
@@ -717,7 +717,7 @@ fun ProfileCreationWizardDialog(
                             val finalAge = ageText.toIntOrNull() ?: 22
                             onSaveProfile(
                                 generatedUserId,
-                                displayName.ifBlank { "Star Voice User" },
+                                displayName.ifBlank { "HP VOICE User" },
                                 finalAge,
                                 selectedCountry,
                                 bioText,
