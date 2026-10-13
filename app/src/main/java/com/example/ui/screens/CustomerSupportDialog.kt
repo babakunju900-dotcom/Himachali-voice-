@@ -58,7 +58,7 @@ fun CustomerSupportDialog(
                         fontSize = 17.sp
                     )
                     Text(
-                        text = "STAR KING 24/7 User Resolution Desk",
+                        text = "HP VOICE 24/7 User Resolution Desk",
                         color = StarGoldLight,
                         fontSize = 11.sp
                     )

@@ -85,7 +85,7 @@ fun UserProfileSetupDialog(
         mutableIntStateOf(if (initialAge in 18..99) initialAge else 22)
     }
     var selectedCountry by remember { mutableStateOf(initialUser?.country ?: "United States") }
-    var bio by remember { mutableStateOf(initialUser?.bio ?: "Living the Star Voice party vibes! 🌟") }
+    var bio by remember { mutableStateOf(initialUser?.bio ?: "Living the HP VOICE party vibes! 🌟") }
     var gender by remember { mutableStateOf(initialUser?.gender ?: "Star") }
     var isCountryPickerExpanded by remember { mutableStateOf(false) }
 
@@ -170,7 +170,7 @@ fun UserProfileSetupDialog(
                         fontSize = 18.sp
                     )
                     Text(
-                        text = "STAR VOICE CHAT • Step $currentStep of 3",
+                        text = "HP VOICE • Step $currentStep of 3",
                         color = StarGoldLight,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold
@@ -708,7 +708,7 @@ fun UserProfileSetupDialog(
                                     fontSize = 15.sp
                                 )
                                 Text(
-                                    text = "Review how other STAR VOICE users will see your profile card.",
+                                    text = "Review how other HP VOICE users will see your profile card.",
                                     color = TextMuted,
                                     fontSize = 11.sp
                                 )

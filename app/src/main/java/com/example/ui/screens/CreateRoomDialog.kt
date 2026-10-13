@@ -55,7 +55,7 @@ fun CreateRoomDialog(
     var description by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("Party") }
     var seatCount by remember { mutableIntStateOf(8) }
-    var welcomeMsg by remember { mutableStateOf("Welcome to Star Voice! Respect everyone and enjoy the party! 🌟") }
+    var welcomeMsg by remember { mutableStateOf("Welcome to HP VOICE! Respect everyone and enjoy the party! 🌟") }
     var isPrivate by remember { mutableStateOf(false) }
     var password by remember { mutableStateOf("") }
     var coverPhotoUrl by remember { mutableStateOf("") }
@@ -418,7 +418,7 @@ fun CreateRoomDialog(
                                     } else {
                                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                             Text("🎙️ 🌟", fontSize = 36.sp)
-                                            Text("Star Voice Live Room", color = StarGoldLight, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                            Text("HP VOICE Live Room", color = StarGoldLight, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                         }
                                     }
 
@@ -483,7 +483,7 @@ fun CreateRoomDialog(
                                         Spacer(modifier = Modifier.width(10.dp))
                                         Column {
                                             Text(
-                                                text = "Host: ${hostUser?.nickname ?: "Star Voice Host"}",
+                                                text = "Host: ${hostUser?.nickname ?: "HP VOICE Host"}",
                                                 color = Color.White,
                                                 fontWeight = FontWeight.Bold,
                                                 fontSize = 13.sp

@@ -224,13 +224,13 @@ abstract class StarKingDatabase : RoomDatabase() {
             // Seed Users
             val officialOwner = UserEntity(
                 userId = 100001L,
-                nickname = "Star King Official",
+                nickname = "HP VOICE Official",
                 avatarUrl = "avatar_crown",
                 gender = "Star",
                 country = "Global",
                 dob = "2020-01-01",
                 language = "English",
-                bio = "Official Star King Team 🌟 Connect, Talk, Party!",
+                bio = "Official HP VOICE Team 🌟 Connect, Talk, Party!",
                 level = 99,
                 exp = 999999,
                 vipTier = 4,
@@ -368,17 +368,17 @@ abstract class StarKingDatabase : RoomDatabase() {
             // Seed Permanent Official Customer Support Room & Authentic Community Rooms
             val room1 = RoomEntity(
                 roomId = 708101L,
-                name = "⭐ Star Voice Customer Support",
-                description = "Permanent Official 24/7 Customer Support Room for Star Voice. Talk to authorized Star Voice staff for instant account, coin recharge, gift, or safety assistance.",
+                name = "⭐ HP VOICE Customer Support",
+                description = "Permanent Official 24/7 Customer Support Room for HP VOICE. Talk to authorized HP VOICE staff for instant account, coin recharge, gift, or safety assistance.",
                 coverEmoji = "⭐",
                 coverPhotoUrl = "official_support_logo",
                 category = "Official",
                 language = "English",
                 country = "Global",
                 seatCount = 8,
-                welcomeMessage = "⭐ Welcome to Star Voice Customer Support. Authorized staff are active to assist you. Respect staff and community guidelines.",
+                welcomeMessage = "⭐ Welcome to HP VOICE Customer Support. Authorized staff are active to assist you. Respect staff and community guidelines.",
                 hostUserId = 100001L,
-                hostName = "Star Voice Customer Support",
+                hostName = "HP VOICE Customer Support",
                 hostAvatar = "avatar_crown",
                 isLive = true,
                 onlineCount = 85,
@@ -479,7 +479,7 @@ abstract class StarKingDatabase : RoomDatabase() {
             // Seed Seats for Room 1 (Official Support)
             val room1Seats = (0 until 8).map { idx ->
                 if (idx == 0) {
-                    RoomSeatEntity(roomId = 708101L, seatIndex = 0, userId = 100001L, userName = "Star King Official", userAvatar = "avatar_crown", userLevel = 99, userVip = 4)
+                    RoomSeatEntity(roomId = 708101L, seatIndex = 0, userId = 100001L, userName = "HP VOICE Official", userAvatar = "avatar_crown", userLevel = 99, userVip = 4)
                 } else if (idx == 1) {
                     RoomSeatEntity(roomId = 708101L, seatIndex = 1, userId = 100002L, userName = "Customer Support 24/7", userAvatar = "avatar_support", userLevel = 50, userVip = 4)
                 } else {
@@ -581,7 +581,7 @@ abstract class StarKingDatabase : RoomDatabase() {
             val events = listOf(
                 EventEntity(
                     id = "event_top_host_2026",
-                    title = "STAR KING TOP HOST GALA",
+                    title = "HP VOICE TOP HOST GALA",
                     bannerEmoji = "🏆",
                     description = "Collect gift points while hosting live voice rooms. Top 3 hosts win exclusive Diamond Crown badges and 1,000,000 coin prize pool!",
                     startDate = System.currentTimeMillis() - 86400000L * 2,
@@ -618,7 +618,7 @@ abstract class StarKingDatabase : RoomDatabase() {
             dao.insertMessage(ChatMessageEntity(roomId = 708210L, senderUserId = 504890L, senderName = "Princess Layla 👑", senderAvatar = "avatar_layla", senderLevel = 22, senderVip = 4, messageText = "Can you play some soulful acoustic tunes? 💖"))
 
             // Seed Initial Private Support Chat
-            dao.insertMessage(ChatMessageEntity(recipientUserId = 504094L, senderUserId = 100002L, senderName = "Customer Support 24/7", senderAvatar = "avatar_support", senderLevel = 50, senderVip = 4, messageText = "Welcome to Star King Voice Chat! If you have any inquiries regarding recharge, audio seats, or room verification, reply here anytime."))
+            dao.insertMessage(ChatMessageEntity(recipientUserId = 504094L, senderUserId = 100002L, senderName = "Customer Support 24/7", senderAvatar = "avatar_support", senderLevel = 50, senderVip = 4, messageText = "Welcome to HP VOICE! If you have any inquiries regarding recharge, audio seats, or room verification, reply here anytime."))
 
             // Seed Sample Support Ticket
             dao.insertTicket(SupportTicketEntity(
@@ -636,8 +636,8 @@ abstract class StarKingDatabase : RoomDatabase() {
             // Seed Initial Notifications
             dao.insertNotification(NotificationEntity(
                 userId = 504094L,
-                title = "Welcome to Star King!",
-                message = "Congratulations on registering your permanent Star King ID: 504094. Enjoy 1,000 bonus coins!",
+                title = "Welcome to HP VOICE!",
+                message = "Congratulations on registering your permanent HP VOICE ID: 504094. Enjoy 1,000 bonus coins!",
                 type = "SYSTEM"
             ))
             dao.insertNotification(NotificationEntity(

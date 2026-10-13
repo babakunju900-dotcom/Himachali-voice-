@@ -79,7 +79,7 @@ fun ProfileScreen(
     // Resolve Display Name & Profile Picture from Firestore (with local fallback)
     val displayName = remember(firestoreProfile, user) {
         firestoreProfile?.displayName?.ifBlank { user?.nickname }
-            ?: user?.nickname ?: "Star King User"
+            ?: user?.nickname ?: "HP VOICE User"
     }
 
     val profilePicture = remember(firestoreProfile, user) {
@@ -251,7 +251,7 @@ fun ProfileScreen(
                             Spacer(modifier = Modifier.height(3.dp))
 
                             Text(
-                                text = "User ID: STAR-${user?.userId ?: "504094"}",
+                                text = "User ID: HP-${user?.userId ?: "504094"}",
                                 color = StarGoldLight,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 12.sp
@@ -701,7 +701,7 @@ fun ProfileScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Star King Wallet 💼",
+                            text = "HP VOICE Wallet 💼",
                             color = TextWhite,
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp

@@ -46,7 +46,7 @@ fun AgencyDashboardDialog(
             ) {
                 Column {
                     Text(
-                        text = "Star King Agency Guild 🏛️",
+                        text = "HP VOICE Agency Guild 🏛️",
                         color = TextWhite,
                         fontWeight = FontWeight.Bold,
                         fontSize = 17.sp

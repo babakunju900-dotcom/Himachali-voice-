@@ -17,7 +17,7 @@ data class RoomEntity(
     val password: String = "",
     val seatCount: Int = 8, // 8, 10, or 12 seats
     val backgroundTheme: String = "royal_stars",
-    val welcomeMessage: String = "Welcome to Star King! Respect everyone and enjoy the party! 🌟",
+    val welcomeMessage: String = "Welcome to HP VOICE! Respect everyone and enjoy the party! 🌟",
     val hostUserId: Long,
     val hostName: String,
     val hostAvatar: String,

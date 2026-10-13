@@ -42,7 +42,7 @@ class ExampleRobolectricTest {
     fun `read string from context`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val appName = context.getString(R.string.app_name)
-        assertEquals("Star King", appName)
+        assertEquals("HP VOICE", appName)
     }
 
     @Test
@@ -53,7 +53,7 @@ class ExampleRobolectricTest {
             country = "United States",
             dob = "1999-09-09",
             language = "English",
-            bio = "Ready to party on Star King! 👑",
+            bio = "Ready to party on HP VOICE! 👑",
             authProvider = "GOOGLE",
             authIdentifier = "royal.prince@gmail.com",
             deviceInfo = "Google Pixel 8",

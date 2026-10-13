@@ -249,7 +249,7 @@ fun StarVoiceChatPromotionDialog(
                     Icon(Icons.Default.Mic, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "EXPLORE STAR VOICE ROOMS 🎙️",
+                        text = "EXPLORE HP VOICE ROOMS 🎙️",
                         fontWeight = FontWeight.Black,
                         fontSize = 13.sp
                     )

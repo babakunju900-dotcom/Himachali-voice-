@@ -80,7 +80,7 @@ class StarKingRepository(
             country = country,
             dob = dob,
             language = language,
-            bio = bio.ifEmpty { "Hello from Star King! 🌟" },
+            bio = bio.ifEmpty { "Hello from HP VOICE! 🌟" },
             level = 1,
             exp = 0,
             vipTier = 0,
@@ -108,7 +108,7 @@ class StarKingRepository(
         dao.insertNotification(
             NotificationEntity(
                 userId = newUserId,
-                title = "Welcome to Star King Voice Chat!",
+                title = "Welcome to HP VOICE!",
                 message = "Your permanent User ID is $newUserId. 1,000 welcome coins have been credited to your wallet.",
                 type = "SYSTEM"
             )
@@ -482,7 +482,7 @@ class StarKingRepository(
             isPrivate = isPrivate,
             password = password,
             seatCount = seatCount,
-            welcomeMessage = welcomeMsg.ifEmpty { "Welcome to Star King! Respect everyone and enjoy! 🌟" },
+            welcomeMessage = welcomeMsg.ifEmpty { "Welcome to HP VOICE! Respect everyone and enjoy! 🌟" },
             hostUserId = hostUser.userId,
             hostName = hostUser.nickname,
             hostAvatar = hostUser.avatarUrl,
@@ -1320,7 +1320,7 @@ class StarKingRepository(
         dao.insertNotification(
             NotificationEntity(
                 userId = userId,
-                title = "⚠️ Official Warning from STAR VOICE Moderation",
+                title = "⚠️ Official Warning from HP VOICE Moderation",
                 message = warning,
                 type = "SYSTEM"
             )

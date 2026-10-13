@@ -63,7 +63,7 @@ fun AuthRegistrationScreen(
     var country by remember { mutableStateOf("United States") }
     var dob by remember { mutableStateOf("2000-01-01") }
     var language by remember { mutableStateOf("English") }
-    var bio by remember { mutableStateOf("Ready to connect, talk and party on Star King! 🌟") }
+    var bio by remember { mutableStateOf("Ready to connect, talk and party on HP VOICE! 🌟") }
 
     // Phone OTP fields
     var countryCode by remember { mutableStateOf("+1") }
@@ -126,7 +126,7 @@ fun AuthRegistrationScreen(
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Text(
-                            text = "STAR KING",
+                            text = "HP VOICE",
                             color = StarGoldPrimary,
                             fontWeight = FontWeight.Black,
                             fontSize = 17.sp,
@@ -165,14 +165,14 @@ fun AuthRegistrationScreen(
                             ) {
                                 Column(modifier = Modifier.padding(16.dp)) {
                                     Text(
-                                        text = "Welcome to Star King 🌟",
+                                        text = "Welcome to HP VOICE 🌟",
                                         color = TextWhite,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 19.sp
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        text = "Connect • Talk • Party • Make Friends",
+                                        text = "Connect • Talk • Play • Enjoy",
                                         color = StarGoldPrimary,
                                         fontWeight = FontWeight.SemiBold,
                                         fontSize = 12.sp
@@ -857,7 +857,7 @@ fun AuthRegistrationScreen(
                     text = {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Text(
-                                text = "Sign in using your Google account to connect with Star King voice rooms and sync your numeric User ID.",
+                                text = "Sign in using your Google account to connect with HP VOICE rooms and sync your numeric User ID.",
                                 color = TextMuted,
                                 fontSize = 12.sp,
                                 lineHeight = 16.sp

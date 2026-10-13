@@ -391,7 +391,7 @@ fun HomeScreen(
                 }
             }
 
-            // --- 4. PROMOTIONAL SLIDER (STAR Voice Chat + Gala Banner) ---
+            // --- 4. PROMOTIONAL SLIDER (HP VOICE + Gala Banner) ---
             item {
                 Column(
                     modifier = Modifier
@@ -484,7 +484,7 @@ fun HomeScreen(
                 }
             }
 
-            // --- 4.5 DEDICATED OFFICIAL STAR VOICE SUPPORT ROOM (Matching Requirement 13) ---
+            // --- 4.5 DEDICATED OFFICIAL HP VOICE SUPPORT ROOM (Matching Requirement 13) ---
             item {
                 val officialRoom = rooms.find { it.category.equals("Official", ignoreCase = true) || it.name.contains("Customer Support", ignoreCase = true) }
                 if (officialRoom != null) {
@@ -526,7 +526,7 @@ fun HomeScreen(
                                     .padding(14.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                // Star Voice Customer Support Logo / Badge
+                                // HP VOICE Customer Support Logo / Badge
                                 Box(
                                     contentAlignment = Alignment.Center,
                                     modifier = Modifier

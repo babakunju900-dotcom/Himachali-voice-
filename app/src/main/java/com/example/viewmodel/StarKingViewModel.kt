@@ -270,7 +270,7 @@ class StarKingViewModel(application: Application) : AndroidViewModel(application
         val newMoment = MomentEntity(
             id = "moment_${System.currentTimeMillis()}",
             userId = user?.userId ?: 504094L,
-            authorName = user?.nickname ?: "Star Voice User",
+            authorName = user?.nickname ?: "HP VOICE User",
             authorAvatar = user?.avatarUrl ?: "avatar_user",
             authorGender = user?.gender ?: "Female",
             vipTier = user?.vipTier ?: 1,
@@ -392,7 +392,7 @@ class StarKingViewModel(application: Application) : AndroidViewModel(application
                 )
             }
             closeProfileCreationWizard()
-            showToast("Profile created successfully! Welcome to Star Voice 🌟")
+            showToast("Profile created successfully! Welcome to HP VOICE 🌟")
         }
     }
 
@@ -419,7 +419,7 @@ class StarKingViewModel(application: Application) : AndroidViewModel(application
     fun toggleAllowProfileSharing() { _allowProfileSharing.value = !_allowProfileSharing.value }
     fun shareProfile() {
         val user = currentUser.value
-        val nick = user?.nickname ?: "Star Voice User"
+        val nick = user?.nickname ?: "HP VOICE User"
         val uid = user?.userId ?: 504094L
         showToast("Profile link copied for $nick (ID: $uid) 📋")
     }
@@ -989,7 +989,7 @@ class StarKingViewModel(application: Application) : AndroidViewModel(application
 
     fun removeFakeOrInvalidRoom(roomId: Long) {
         if (roomId == 708101L) {
-            showToast("Cannot remove ⭐ Star Voice Customer Support official room!")
+            showToast("Cannot remove ⭐ HP VOICE Customer Support official room!")
             return
         }
         viewModelScope.launch {
@@ -1134,7 +1134,7 @@ class StarKingViewModel(application: Application) : AndroidViewModel(application
                 category = category,
                 details = details
             )
-            showToast("Report submitted to Star King Moderation team. Thank you!")
+            showToast("Report submitted to HP VOICE Moderation team. Thank you!")
         }
     }
 
@@ -1211,7 +1211,7 @@ class StarKingViewModel(application: Application) : AndroidViewModel(application
             )
             _currentUserId.value = newUser.userId
             closeAuth()
-            showToast("Registered! Permanent Star King ID: ${newUser.userId} 🌟")
+            showToast("Registered! Permanent HP VOICE ID: ${newUser.userId} 🌟")
         }
     }
 
@@ -1315,7 +1315,7 @@ class StarKingViewModel(application: Application) : AndroidViewModel(application
             )
             _currentUserId.value = newUser.userId
             closeAuth()
-            showToast("Welcome to Star King! Your permanent User ID is ${newUser.userId} 🌟 (1,000 Coins Credited)")
+            showToast("Welcome to HP VOICE! Your permanent User ID is ${newUser.userId} 🌟 (1,000 Coins Credited)")
         }
     }
 

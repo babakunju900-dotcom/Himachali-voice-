@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Star King Voice Chat</string>
+    <string name="app_name">HP VOICE</string>
 
     <!-- Navigation & Bottom Tabs -->
     <string name="nav_home">Home</string>
@@ -45,7 +45,7 @@
 
     <!-- Featured Gala -->
     <string name="featured_gala_badge">FEATURED GALA 🏆</string>
-    <string name="featured_gala_title">Star King Voice Superstars</string>
+    <string name="featured_gala_title">HP VOICE Superstars</string>
     <string name="featured_gala_subtitle">Win exclusive 3D animated crowns &amp; entrance gifts!</string>
 
     <!-- Events & Leaderboard Screen -->
@@ -76,7 +76,7 @@
     <string name="admin_management_panel">Admin Management Panel</string>
     <string name="search_rooms_placeholder">Search by Room Name, ID or Host...</string>
     <string name="official_platform_room_title">Official Platform Room 👑</string>
-    <string name="official_platform_room_desc">Official STAR VOICE 24/7 Verified Support &amp; Inquiries</string>
+    <string name="official_platform_room_desc">Official HP VOICE 24/7 Verified Support &amp; Inquiries</string>
     <string name="btn_enter">Enter</string>
     <string name="category_all">All</string>
     <string name="category_party">Party</string>

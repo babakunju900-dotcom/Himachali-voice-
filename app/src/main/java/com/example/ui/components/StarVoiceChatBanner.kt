@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.sp
 import com.example.ui.theme.*
 
 /**
- * STAR Voice Chat Promotional Banner component
+ * HP VOICE Promotional Banner component
  * Faithfully presents the attached STAR Voice Chat banner with NEXUS CEO branding,
  * gold star microphone logo, welcome typography, feature badges, and scenic lake ambiance.
  */
@@ -246,7 +246,7 @@ fun StarVoiceChatBanner(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // "WELCOME TO STAR VOICE CHAT"
+                    // "WELCOME TO HP VOICE"
                     Column {
                         Text(
                             text = "WELCOME TO",
@@ -256,7 +256,7 @@ fun StarVoiceChatBanner(
                             letterSpacing = 1.sp
                         )
                         Text(
-                            text = "STAR VOICE CHAT",
+                            text = "HP VOICE",
                             style = MaterialTheme.typography.titleMedium.copy(
                                 brush = Brush.horizontalGradient(
                                     listOf(StarGoldLight, StarGoldPrimary, Color.White)

@@ -178,7 +178,7 @@ jobs:
           RELEASE_TITLE="Debug APK Build #${{ github.run_number }}"
 
           cat << 'EOF' > release_notes.md
-          ### Star Voice Chat - Debug APK Build
+          ### HP VOICE - Debug APK Build
 
           - **Type:** Automatically generated debug APK built by GitHub Actions
           - **Run Number:** #${{ github.run_number }}

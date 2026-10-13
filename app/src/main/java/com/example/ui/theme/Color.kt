@@ -2,7 +2,7 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Star King Luxury Dark Palette
+// HP VOICE Luxury Dark Palette
 val StarKingBgDark = Color(0xFF09071A)
 val StarKingSurfaceDark = Color(0xFF130F2B)
 val StarKingSurfaceVariantDark = Color(0xFF1E173D)

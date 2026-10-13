@@ -22,6 +22,6 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "Star King Voice Chat"
+rootProject.name = "HP VOICE"
 
 include(":app")

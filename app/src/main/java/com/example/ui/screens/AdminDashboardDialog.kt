@@ -116,7 +116,7 @@ fun AdminDashboardDialog(
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "STAR VOICE ADMIN CONTROL",
+                                text = "HP VOICE ADMIN CONTROL",
                                 color = Color.White,
                                 fontWeight = FontWeight.Black,
                                 fontSize = 16.sp
@@ -314,7 +314,7 @@ fun AdminDashboardDialog(
                                                     }
                                                 }
                                                 val flag = CountryHelper.getFlag(user.country)
-                                                Text("ID: STAR-${user.userId} • $flag ${user.country} • Level ${user.level}", color = TextMuted, fontSize = 11.sp)
+                                                Text("ID: HP-${user.userId} • $flag ${user.country} • Level ${user.level}", color = TextMuted, fontSize = 11.sp)
                                             }
                                         }
 

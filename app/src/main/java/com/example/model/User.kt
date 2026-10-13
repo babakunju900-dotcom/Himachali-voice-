@@ -31,7 +31,7 @@ data class UserEntity(
     val country: String = "United States",
     val dob: String = "2000-01-01",
     val language: String = "English",
-    val bio: String = "Living the Star King party vibes! 🌟",
+    val bio: String = "Living the HP VOICE party vibes! 🌟",
     val level: Int = 1,
     val exp: Int = 0,
     val vipTier: Int = 0, // 0: None, 1: VIP Bronze, 2: VIP Silver, 3: VIP Gold, 4: VIP Diamond

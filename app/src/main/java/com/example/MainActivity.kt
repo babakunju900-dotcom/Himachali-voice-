@@ -427,10 +427,10 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                                     onShareProfile = {
                                         val sendIntent = android.content.Intent().apply {
                                             action = android.content.Intent.ACTION_SEND
-                                            putExtra(android.content.Intent.EXTRA_TEXT, "Connect with ${currentUser?.nickname ?: "me"} on STAR Voice Chat! User ID: STAR-${currentUser?.userId ?: 504094} 🌟")
+                                            putExtra(android.content.Intent.EXTRA_TEXT, "Connect with ${currentUser?.nickname ?: "me"} on HP VOICE! User ID: HP-${currentUser?.userId ?: 504094} 🌟")
                                             type = "text/plain"
                                         }
-                                        context.startActivity(android.content.Intent.createChooser(sendIntent, "Share Star Voice Profile"))
+                                        context.startActivity(android.content.Intent.createChooser(sendIntent, "Share HP VOICE Profile"))
                                     },
                                     onSyncFirestore = { viewModel.syncProfileWithFirestore() },
                                     onEquipMedal = { medalId -> viewModel.equipStoreItem(medalId) },
@@ -456,7 +456,7 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
 
         // --- MODALS & BOTTOM SHEETS ---
 
-        // STAR Voice Chat Promotional Welcome Dialog
+        // HP VOICE Promotional Welcome Dialog
         if (showStarVoicePromoModal) {
             StarVoiceChatPromotionDialog(
                 onDismiss = { showStarVoicePromoModal = false },
@@ -466,7 +466,7 @@ fun StarKingApp(viewModel: StarKingViewModel = viewModel()) {
                 },
                 onClaimRewards = {
                     viewModel.rechargeCoins("pkg_coins_500")
-                    viewModel.showToast("🎁 Claimed 500 Welcome Coins from STAR Voice Chat & NEXUS!")
+                    viewModel.showToast("🎁 Claimed 500 Welcome Coins from HP VOICE & NEXUS!")
                 }
             )
         }
